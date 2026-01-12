@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <div align="center">
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
@@ -18,3 +19,7 @@ View your app in AI Studio: https://ai.studio/apps/drive/1bh2pzD8_vX2JtBV4ZT2rV7
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+=======
+# PointsCalculator
+Professional KCSE Grade and KUCCPS Cluster Point Calculator with integrated M-Pesa payment gateway and official cluster weighting logic.
+>>>>>>> dc983612b952bad888c3359e82cd6e9da463d2c5
