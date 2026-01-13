@@ -95,32 +95,13 @@ const App: React.FC = () => {
     const inputCode = transactionCode.trim();
     setAuthError(null);
     
-    // Check against ALL expired codes (works across devices since they're in localStorage)
-    const currentUsedCodes = JSON.parse(localStorage.getItem('burned_codes') || '[]');
-    if (currentUsedCodes.includes(inputCode)) {
-      setAuthError("❌ PASSKEY ALREADY USED - This code has been activated on another device. Please contact your administrator for a new passkey.");
-      setTransactionCode('');
-      return;
-    }
-
-    // Check against the CURRENT active passkey
-    const currentActivePasskey = localStorage.getItem('current_passkey') || '2025';
+    // Constant passkey 2025 - always valid, no usage restrictions
     setIsProcessing(true);
 
     setTimeout(() => {
-      const isPasskeyMatch = inputCode === currentActivePasskey;
+      const isPasskeyMatch = inputCode === '2025';
 
       if (isPasskeyMatch) {
-        // Mark as used (but keep passkey constant at 2025)
-        const newBurned = [...currentUsedCodes, inputCode];
-        localStorage.setItem('burned_codes', JSON.stringify(newBurned));
-        setUsedCodes(newBurned);
-        
-        // Keep passkey constant at 2025 - don't increment
-        // The admin must manually change it from the admin panel
-        localStorage.setItem('current_passkey', '2025');
-        setCurrentRequiredPasskey('2025');
-
         updateStats();
         setIsProcessing(false);
         setShowSuccessTick(true);
@@ -128,21 +109,19 @@ const App: React.FC = () => {
           setShowSuccessTick(false);
           setStep(AppStep.Results);
         }, 1200);
+        setTransactionCode('');
       } else {
         setIsProcessing(false);
         setTransactionCode('');
-        setAuthError("❌ ACCESS DENIED: Invalid or expired passkey. Please request a new one from your administrator.");
+        setAuthError("❌ INVALID PASSKEY - Please enter 2025 to proceed.");
         setTimeout(() => setAuthError(null), 3000);
       }
     }, 800);
   };
 
   const generateNextAdminKey = () => {
-    // Passkey is constant at 2025 - admin can manually change it if needed
-    const currentPasskey = '2025';
-    localStorage.setItem('current_passkey', '2025');
-    setCurrentRequiredPasskey('2025');
-    alert(`✅ Passkey Reset!\n\nActive Passkey: 2025\n\nThis is the constant passkey for all devices. To change it, use the admin input field below.\n\nTo disable used codes and allow 2025 to work again:\nClick "Clear All Used Codes"`);
+    // Passkey is constant at 2025 - no changes needed
+    alert(`✅ PASSKEY CONFIGURATION\n\n🔐 Current Passkey: 2025\n\nThis is the CONSTANT passkey for all users and devices.\n\nIt will NEVER change automatically.\n\nTo change it, use the "Change Passkey" input field below.`);
   };
 
   const resetForNew = () => {
@@ -161,12 +140,10 @@ const App: React.FC = () => {
   };
 
   const resetPasskeySequence = () => {
-    if (confirm("⚠️ Reset passkey sequence back to 2025? This will clear all usage history and affect ALL devices.\n\nAre you sure?")) {
-      setUsedCodes([]);
-      setCurrentRequiredPasskey('2025');
-      localStorage.setItem('burned_codes', JSON.stringify([]));
+    if (confirm("🔐 Passkey is CONSTANT at 2025.\n\nIt will work for unlimited users and devices.\n\nNo reset needed - everyone uses: 2025")) {
       localStorage.setItem('current_passkey', '2025');
-      alert("✅ Passkey sequence reset. All devices will update automatically.");
+      setCurrentRequiredPasskey('2025');
+      alert("✅ Confirmed: Passkey is 2025 (constant for all devices)");
     }
   };
 
