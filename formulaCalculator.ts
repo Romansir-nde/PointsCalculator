@@ -57,7 +57,7 @@ export const calculateWeightedClusterPoints = (
   // Get total points (t)
   const totalPoints = Object.values(selectedGrades).reduce((sum, points) => sum + points, 0);
 
-  // Track missing subjects from cluster requirements
+  // Track missing CORE subjects (only check single-subject groups which are mandatory)
   const missingRequiredSubjects: string[] = [];
   const missingSubjectNames: string[] = [];
   
@@ -82,14 +82,16 @@ export const calculateWeightedClusterPoints = (
         relevantSubjects.push(subjectWithMaxPoints);
       }
     } else {
-      // Track missing subject group
-      const subjectId = subjectGroup[0]; // Use first subject in group as reference
-      missingRequiredSubjects.push(subjectId);
-      
-      // Get human-readable name from SUBJECTS
-      const subject = SUBJECTS.find(s => s.id === subjectId);
-      if (subject) {
-        missingSubjectNames.push(subject.name);
+      // Only mark as missing if this is a CORE subject (single-item array = mandatory)
+      if (subjectGroup.length === 1) {
+        const coreSubjectId = subjectGroup[0];
+        missingRequiredSubjects.push(coreSubjectId);
+        
+        // Get human-readable name from SUBJECTS
+        const subject = SUBJECTS.find(s => s.id === coreSubjectId);
+        if (subject) {
+          missingSubjectNames.push(subject.name);
+        }
       }
     }
   }
@@ -101,7 +103,8 @@ export const calculateWeightedClusterPoints = (
   let weightedClusterPoints = 0;
   let isEligible = true;
 
-  if (sumR === 0 || totalPoints === 0 || relevantSubjects.length < cluster.subjects.length) {
+  // Only ineligible if CORE subjects are missing or score is below threshold
+  if (missingSubjectNames.length > 0 || sumR === 0 || totalPoints === 0) {
     isEligible = false;
     weightedClusterPoints = 0;
   } else {
