@@ -23,6 +23,7 @@ const App: React.FC = () => {
   const [adminAuth, setAdminAuth] = useState({ user: '', pass: '', loggedIn: false });
   const [stats, setStats] = useState({ totalCalculations: 0 });
   const [currentRequiredPasskey, setCurrentRequiredPasskey] = useState('2025');
+  const [newPasskeyInput, setNewPasskeyInput] = useState('');
 
   // Modal states for AI
   const [showCourseModal, setShowCourseModal] = useState(false);
@@ -145,6 +146,19 @@ const App: React.FC = () => {
       setCurrentRequiredPasskey('2025');
       alert("✅ Confirmed: Passkey is 2025 (constant for all devices)");
     }
+  };
+
+  const changePasskey = () => {
+    if (!newPasskeyInput.trim()) {
+      alert("❌ Please enter a new passkey");
+      return;
+    }
+    
+    const newKey = newPasskeyInput.trim();
+    localStorage.setItem('current_passkey', newKey);
+    setCurrentRequiredPasskey(newKey);
+    setNewPasskeyInput('');
+    alert(`✅ Passkey changed successfully!\n\nNew Passkey: ${newKey}\n\nAll devices will sync automatically.\n\nOld passkey (2025) is now invalid.`);
   };
 
   // Build fallback from dataset with real KUCCPS formula and cutoffs
@@ -572,6 +586,27 @@ Guidelines:
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 pt-6 border-t dark:border-slate-700">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-2xl border-2 border-blue-200 dark:border-blue-800">
+                    <h3 className="text-[10px] font-black uppercase text-blue-600 tracking-widest mb-4 flex items-center gap-2">
+                      <i className="fas fa-shield-alt"></i> Change Passkey (Due to Overuse)
+                    </h3>
+                    <div className="space-y-3">
+                      <input 
+                        type="text" 
+                        placeholder="Enter new passkey" 
+                        className="w-full bg-white dark:bg-slate-800 p-3 rounded-lg font-bold outline-none border-2 border-blue-200 dark:border-blue-800 focus:border-blue-500 text-slate-900 dark:text-white text-sm"
+                        value={newPasskeyInput}
+                        onChange={e => setNewPasskeyInput(e.target.value)}
+                      />
+                      <button 
+                        onClick={changePasskey}
+                        className="w-full bg-blue-600 text-white font-black py-3 rounded-lg uppercase tracking-widest hover:bg-blue-700 transition-all text-[10px]"
+                      >
+                        <i className="fas fa-check-circle mr-2"></i> Update Passkey
+                      </button>
+                    </div>
+                  </div>
+
                   <button 
                     onClick={resetPasskeySequence}
                     className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-black py-4 rounded-xl uppercase tracking-widest hover:border-red-500 hover:text-red-500 transition-all"
