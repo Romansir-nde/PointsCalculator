@@ -113,7 +113,7 @@ const App: React.FC = () => {
       } else {
         setIsProcessing(false);
         setTransactionCode('');
-        setAuthError("❌ INVALID PASSKEY - Please enter 2025 to proceed.");
+        setAuthError("❌ Wrong Input - Please try again.");
         setTimeout(() => setAuthError(null), 3000);
       }
     }, 800);
