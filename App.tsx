@@ -104,22 +104,22 @@ const App: React.FC = () => {
     }
 
     // Check against the CURRENT active passkey
-    const currentActivePasskey = localStorage.getItem('current_passkey');
+    const currentActivePasskey = localStorage.getItem('current_passkey') || '2025';
     setIsProcessing(true);
 
     setTimeout(() => {
       const isPasskeyMatch = inputCode === currentActivePasskey;
 
       if (isPasskeyMatch) {
-        // Immediately mark as used
+        // Mark as used (but keep passkey constant at 2025)
         const newBurned = [...currentUsedCodes, inputCode];
         localStorage.setItem('burned_codes', JSON.stringify(newBurned));
         setUsedCodes(newBurned);
         
-        // Generate and store next passkey
-        const nextKey = (parseInt(currentActivePasskey || '2025') + 1).toString();
-        localStorage.setItem('current_passkey', nextKey);
-        setCurrentRequiredPasskey(nextKey);
+        // Keep passkey constant at 2025 - don't increment
+        // The admin must manually change it from the admin panel
+        localStorage.setItem('current_passkey', '2025');
+        setCurrentRequiredPasskey('2025');
 
         updateStats();
         setIsProcessing(false);
@@ -138,22 +138,11 @@ const App: React.FC = () => {
   };
 
   const generateNextAdminKey = () => {
-    // Get current values from localStorage (source of truth for cross-device sync)
-    const currentPasskey = localStorage.getItem('current_passkey') || '2025';
-    const currentBurned = JSON.parse(localStorage.getItem('burned_codes') || '[]');
-    
-    // Mark current passkey as used
-    if (!currentBurned.includes(currentPasskey)) {
-      currentBurned.push(currentPasskey);
-      localStorage.setItem('burned_codes', JSON.stringify(currentBurned));
-      setUsedCodes(currentBurned);
-    }
-    
-    // Generate next key
-    const nextKey = (parseInt(currentPasskey) + 1).toString();
-    localStorage.setItem('current_passkey', nextKey);
-    setCurrentRequiredPasskey(nextKey);
-    alert(`✅ New passkey generated successfully!\n\nNew Active Passkey: ${nextKey}\n\nAll devices will be updated automatically. Old passkey (${currentPasskey}) is now expired worldwide.`);
+    // Passkey is constant at 2025 - admin can manually change it if needed
+    const currentPasskey = '2025';
+    localStorage.setItem('current_passkey', '2025');
+    setCurrentRequiredPasskey('2025');
+    alert(`✅ Passkey Reset!\n\nActive Passkey: 2025\n\nThis is the constant passkey for all devices. To change it, use the admin input field below.\n\nTo disable used codes and allow 2025 to work again:\nClick "Clear All Used Codes"`);
   };
 
   const resetForNew = () => {
