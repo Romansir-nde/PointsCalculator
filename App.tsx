@@ -5,6 +5,8 @@ import { Grade, AppStep } from './types';
 import { getPointsFromGrade, calculateMeanGradeData, calculateClusterWeight } from './utils';
 import { GoogleGenAI } from "@google/genai";
 import CLUSTER_COURSES from './clusterCourses';
+import { calculateWeightedClusterPoints, getEligibilityMessage } from './formulaCalculator';
+import KUCCPS_2024_CUTOFFS from './clusterCutoffs';
 
 const App: React.FC = () => {
   const [selectedGrades, setSelectedGrades] = useState<Record<string, Grade>>({});
@@ -172,36 +174,44 @@ const App: React.FC = () => {
     }
   };
 
-  // Build fallback from dataset - defined outside try/catch so it's accessible in error handling
-  const buildFallbackFromDataset = (clusterId: number, clusterName: string, meanGrade: string | number, totalPoints: number, weight: number) => {
+  // Build fallback from dataset with real KUCCPS formula and cutoffs
+  const buildFallbackFromDataset = (clusterId: number, clusterName: string, selectedGradesRecord: Record<string, Grade>) => {
+    // Calculate weighted cluster points using official KUCCPS formula
+    const gradePoints = Object.entries(selectedGradesRecord).reduce((acc, [subjectId, grade]) => {
+      acc[subjectId] = getPointsFromGrade(grade as Grade);
+      return acc;
+    }, {} as Record<string, number>);
+
+    const clusterCalc = calculateWeightedClusterPoints(gradePoints, clusterId);
     const entries = CLUSTER_COURSES[clusterId] || [];
-    
-    let profileMsg = '';
-    
-    if (totalPoints >= 65) {
-      profileMsg = `🎓 Excellent Profile: With ${totalPoints} points and a mean grade of ${meanGrade}, you are a highly competitive candidate for top-tier degree programmes. You have strong placement prospects across multiple courses in this cluster.`;
-    } else if (totalPoints >= 60) {
-      profileMsg = `✅ Strong Profile: With ${totalPoints} points and a mean grade of ${meanGrade}, you are well-positioned for degree programmes in this cluster. You should have good placement prospects.`;
-    } else if (totalPoints >= 45) {
-      profileMsg = `📚 Good Profile: With ${totalPoints} points and a mean grade of ${meanGrade}, you qualify for both degree and higher diploma programmes. Consider both options to maximize your choices.`;
-    } else if (totalPoints >= 40) {
-      profileMsg = `🎯 Moderate Profile: With ${totalPoints} points and a mean grade of ${meanGrade}, you have opportunities in diploma and selected degree programmes. Focus on diplomas for better placement chances, or explore degree options at institutions actively recruiting in your score range.`;
-    } else if (totalPoints >= 30) {
-      profileMsg = `📖 Diploma-Focused Profile: With ${totalPoints} points and a mean grade of ${meanGrade}, diploma programmes are your best fit. These credentials are highly respected and lead to excellent career paths. Many employers value practical diploma training.`;
-    } else {
-      profileMsg = `📜 Certificate/Diploma Profile: With ${totalPoints} points and a mean grade of ${meanGrade}, certificate and diploma programmes provide excellent stepping stones. These qualifications build practical skills employers seek and can lead to further advancement opportunities.`;
+    const cutoffData = KUCCPS_2024_CUTOFFS[clusterId];
+
+    if (!clusterCalc.isEligible) {
+      return `${getEligibilityMessage(clusterCalc)}\n\n📊 Formula Breakdown:\n- Sum of cluster subjects (r): ${clusterCalc.sumR}/48\n- Your total points (t): ${clusterCalc.totalPoints}/84\n- Calculated points: ${clusterCalc.weightedClusterPoints}\n\nYou need at least 30 points to be considered for this cluster.`;
     }
 
-    if (entries.length === 0) {
-      return `${profileMsg}\n\n❌ No course data available for this cluster at this time. Please contact your administrator for guidance.`;
+    // Build university comparison
+    let universityComparison = '';
+    if (cutoffData) {
+      universityComparison = `\n\n📈 UNIVERSITY CUTOFFS (KUCCPS 2024)\n\nYour Score: ${clusterCalc.weightedClusterPoints.toFixed(2)} points\n\n`;
+      universityComparison += cutoffData.universities
+        .map(uni => {
+          const status = clusterCalc.weightedClusterPoints >= uni.cutoffPoints ? '✅' : '⚠️';
+          return `${status} ${uni.university}: ${uni.cutoffPoints} points (${uni.programmeCount} programmes)`;
+        })
+        .join('\n');
+      
+      universityComparison += `\n\n📋 Cluster Average Cutoff: ${cutoffData.averageCutoff.toFixed(2)} points`;
+      universityComparison += `\nMinimum Eligible: ${cutoffData.minRequiredForEntry.toFixed(2)} points`;
     }
 
-    const suggestions = entries.map((e, idx) => {
+    // Build courses list
+    const suggestions = entries.slice(0, 15).map((e, idx) => {
       const uniList = (e.universities || []).slice(0, 3).join(', ');
-      return `${idx + 1}. ${e.course}\n   - Universities: ${uniList}`;
+      return `${idx + 1}. ${e.course}\n   📍 ${uniList}`;
     });
 
-    return `📊 YOUR PLACEMENT PROFILE\n${profileMsg}\n\n🎓 RECOMMENDED COURSES IN ${clusterName.toUpperCase()}\n\nWe've identified ${entries.length} courses suited to your profile. Review these options carefully:\n\n${suggestions.join('\n\n')}`;
+    return `${getEligibilityMessage(clusterCalc)}\n\n📚 RECOMMENDED COURSES (${entries.length} Available)\n\n${suggestions.join('\n\n')}${universityComparison}`;
   };
 
   const viewCourses = async (cluster: any) => {
@@ -214,10 +224,7 @@ const App: React.FC = () => {
       const apiKey = process.env.API_KEY || (import.meta as any)?.env?.VITE_GOOGLE_API_KEY;
 
       if (!apiKey) {
-        const weight = calculationResults.clusterWeights[cluster.id];
-        const totalPoints = calculationResults.totalPoints;
-        const meanGrade = calculationResults.meanGrade;
-        const fallback = buildFallbackFromDataset(cluster.id, cluster.name, meanGrade, totalPoints, weight);
+        const fallback = buildFallbackFromDataset(cluster.id, cluster.name, selectedGrades);
         setGeneratedCourses(fallback);
         setIsGeneratingCourses(false);
         return;
@@ -252,13 +259,9 @@ Guidelines:
       setGeneratedCourses(response.text || 'Unable to generate suggestions at this time.');
     } catch (e) {
       console.error('Error in viewCourses:', e);
-      // On any error, fall back to local dataset
+      // On any error, fall back to local dataset with real formula
       try {
-        const weight = calculationResults.clusterWeights[cluster.id];
-        const totalPoints = calculationResults.totalPoints;
-        const meanGrade = calculationResults.meanGrade;
-
-        const fallback = buildFallbackFromDataset(cluster.id, cluster.name, meanGrade, totalPoints, weight);
+        const fallback = buildFallbackFromDataset(cluster.id, cluster.name, selectedGrades);
         setGeneratedCourses(fallback);
       } catch (ex) {
         console.error('Error in fallback:', ex);
