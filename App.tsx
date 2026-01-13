@@ -35,7 +35,23 @@ const App: React.FC = () => {
     
     if (savedCodes) setUsedCodes(JSON.parse(savedCodes));
     if (savedStats) setStats(JSON.parse(savedStats));
-    if (savedPasskey) setCurrentRequiredPasskey(savedPasskey || '2025');
+    if (savedPasskey) setCurrentRequiredPasskey(savedPasskey);
+
+    // Real-time sync across tabs/windows: Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'current_passkey' && e.newValue) {
+        setCurrentRequiredPasskey(e.newValue);
+      }
+      if (e.key === 'burned_codes' && e.newValue) {
+        setUsedCodes(JSON.parse(e.newValue));
+      }
+      if (e.key === 'app_stats' && e.newValue) {
+        setStats(JSON.parse(e.newValue));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const updateStats = () => {
@@ -70,25 +86,31 @@ const App: React.FC = () => {
     const inputCode = transactionCode.trim();
     setAuthError(null);
     
-    if (usedCodes.includes(inputCode)) {
-      setAuthError("PASSKEY ALREADY EXPIRED");
+    // Check against ALL expired codes (works across devices since they're in localStorage)
+    const currentUsedCodes = JSON.parse(localStorage.getItem('burned_codes') || '[]');
+    if (currentUsedCodes.includes(inputCode)) {
+      setAuthError("❌ PASSKEY ALREADY USED - This code has been activated on another device. Please contact your administrator for a new passkey.");
       setTransactionCode('');
       return;
     }
 
+    // Check against the CURRENT active passkey
+    const currentActivePasskey = localStorage.getItem('current_passkey');
     setIsProcessing(true);
 
     setTimeout(() => {
-      const isPasskeyMatch = inputCode === currentRequiredPasskey;
+      const isPasskeyMatch = inputCode === currentActivePasskey;
 
       if (isPasskeyMatch) {
-        const newBurned = [...usedCodes, inputCode];
-        setUsedCodes(newBurned);
+        // Immediately mark as used
+        const newBurned = [...currentUsedCodes, inputCode];
         localStorage.setItem('burned_codes', JSON.stringify(newBurned));
+        setUsedCodes(newBurned);
         
-        const nextKey = (parseInt(currentRequiredPasskey) + 1).toString();
-        setCurrentRequiredPasskey(nextKey);
+        // Generate and store next passkey
+        const nextKey = (parseInt(currentActivePasskey || '2025') + 1).toString();
         localStorage.setItem('current_passkey', nextKey);
+        setCurrentRequiredPasskey(nextKey);
 
         updateStats();
         setIsProcessing(false);
@@ -100,25 +122,29 @@ const App: React.FC = () => {
       } else {
         setIsProcessing(false);
         setTransactionCode('');
-        setAuthError("ACCESS DENIED: INVALID PASSKEY");
+        setAuthError("❌ ACCESS DENIED: Invalid or expired passkey. Please request a new one from your administrator.");
         setTimeout(() => setAuthError(null), 3000);
       }
     }, 800);
   };
 
   const generateNextAdminKey = () => {
-    const current = parseInt(currentRequiredPasskey);
-    const nextKey = (current + 1).toString();
+    // Get current values from localStorage (source of truth for cross-device sync)
+    const currentPasskey = localStorage.getItem('current_passkey') || '2025';
+    const currentBurned = JSON.parse(localStorage.getItem('burned_codes') || '[]');
     
-    if (!usedCodes.includes(currentRequiredPasskey)) {
-        const newBurned = [...usedCodes, currentRequiredPasskey];
-        setUsedCodes(newBurned);
-        localStorage.setItem('burned_codes', JSON.stringify(newBurned));
+    // Mark current passkey as used
+    if (!currentBurned.includes(currentPasskey)) {
+      currentBurned.push(currentPasskey);
+      localStorage.setItem('burned_codes', JSON.stringify(currentBurned));
+      setUsedCodes(currentBurned);
     }
     
-    setCurrentRequiredPasskey(nextKey);
+    // Generate next key
+    const nextKey = (parseInt(currentPasskey) + 1).toString();
     localStorage.setItem('current_passkey', nextKey);
-    alert(`Passkey issued. New active key is now ${nextKey}`);
+    setCurrentRequiredPasskey(nextKey);
+    alert(`✅ New passkey generated successfully!\n\nNew Active Passkey: ${nextKey}\n\nAll devices will be updated automatically. Old passkey (${currentPasskey}) is now expired worldwide.`);
   };
 
   const resetForNew = () => {
@@ -137,11 +163,12 @@ const App: React.FC = () => {
   };
 
   const resetPasskeySequence = () => {
-    if (confirm("Reset passkey sequence back to 2025? This will clear all history.")) {
+    if (confirm("⚠️ Reset passkey sequence back to 2025? This will clear all usage history and affect ALL devices.\n\nAre you sure?")) {
       setUsedCodes([]);
       setCurrentRequiredPasskey('2025');
       localStorage.setItem('burned_codes', JSON.stringify([]));
       localStorage.setItem('current_passkey', '2025');
+      alert("✅ Passkey sequence reset. All devices will update automatically.");
     }
   };
 
@@ -156,20 +183,40 @@ const App: React.FC = () => {
 
       const buildFallbackFromDataset = (clusterId: number, clusterName: string, meanGrade: string | number, totalPoints: number, weight: number) => {
         const entries = CLUSTER_COURSES[clusterId] || [];
-        const profileTier = totalPoints >= 60 ? 'Strong candidate for degree programmes' : totalPoints >= 40 ? 'May qualify for degree or higher diploma' : 'More suitable for diploma or certificate programmes';
-
-        if (entries.length === 0) {
-          // Generic fallback if dataset is missing for this cluster
-          return `Local Advisor Suggestions (fallback) for ${clusterName}: No curated data available for this cluster.`;
+        
+        let profileTier = '';
+        let profileMsg = '';
+        
+        if (totalPoints >= 65) {
+          profileTier = 'Excellent candidate';
+          profileMsg = `🎓 Excellent Profile: With ${totalPoints} points and a mean grade of ${meanGrade}, you are a highly competitive candidate for top-tier degree programmes. You have strong placement prospects across multiple courses in this cluster.`;
+        } else if (totalPoints >= 60) {
+          profileTier = 'Strong candidate for degree programmes';
+          profileMsg = `✅ Strong Profile: With ${totalPoints} points and a mean grade of ${meanGrade}, you are well-positioned for degree programmes in this cluster. You should have good placement prospects.`;
+        } else if (totalPoints >= 45) {
+          profileTier = 'Good candidate for degree or higher diploma';
+          profileMsg = `📚 Good Profile: With ${totalPoints} points and a mean grade of ${meanGrade}, you qualify for both degree and higher diploma programmes. Consider both options to maximize your choices.`;
+        } else if (totalPoints >= 40) {
+          profileTier = 'May qualify for degree or higher diploma';
+          profileMsg = `🎯 Moderate Profile: With ${totalPoints} points and a mean grade of ${meanGrade}, you have opportunities in diploma and selected degree programmes. Focus on diplomas for better placement chances, or explore degree options at institutions actively recruiting in your score range.`;
+        } else if (totalPoints >= 30) {
+          profileTier = 'Better suited for diploma programmes';
+          profileMsg = `📖 Diploma-Focused Profile: With ${totalPoints} points and a mean grade of ${meanGrade}, diploma programmes are your best fit. These credentials are highly respected and lead to excellent career paths. Many employers value practical diploma training.`;
+        } else {
+          profileTier = 'Certificate or diploma programmes recommended';
+          profileMsg = `📜 Certificate/Diploma Profile: With ${totalPoints} points and a mean grade of ${meanGrade}, certificate and diploma programmes provide excellent stepping stones. These qualifications build practical skills employers seek and can lead to further advancement opportunities.`;
         }
 
-        const suggestions = entries.slice(0, 10).map((e, idx) => {
+        if (entries.length === 0) {
+          return `${profileMsg}\n\n❌ No course data available for this cluster at this time. Please contact your administrator for guidance.`;
+        }
+
+        const suggestions = entries.map((e, idx) => {
           const uniList = (e.universities || []).slice(0, 3).join(', ');
-          const why = `${profileTier}. With ${totalPoints} points and a cluster weight of ${weight.toFixed(3)}, this student is a good match for ${e.course} at institutions such as ${uniList}.`;
-          return `${idx + 1}. ${e.course}\n   - Universities: ${uniList}\n   - Why: ${why}`;
+          return `${idx + 1}. ${e.course}\n   - Universities: ${uniList}`;
         });
 
-        return `Local Advisor Suggestions (fallback) for ${clusterName}:\n\n${suggestions.join('\n\n')}`;
+        return `📊 YOUR PLACEMENT PROFILE\n${profileMsg}\n\n🎓 RECOMMENDED COURSES IN ${clusterName.toUpperCase()}\n\nWe've identified ${entries.length} courses suited to your profile. Review these options carefully:\n\n${suggestions.join('\n\n')}`;
       };
 
       if (!apiKey) {
