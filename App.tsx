@@ -4,6 +4,7 @@ import { SUBJECTS, CLUSTERS, GRADE_POINTS } from './constants';
 import { Grade, AppStep } from './types';
 import { getPointsFromGrade, calculateMeanGradeData, calculateClusterWeight } from './utils';
 import { GoogleGenAI } from "@google/genai";
+import CLUSTER_COURSES from './clusterCourses';
 
 const App: React.FC = () => {
   const [selectedGrades, setSelectedGrades] = useState<Record<string, Grade>>({});
@@ -151,7 +152,37 @@ const App: React.FC = () => {
     setGeneratedCourses('');
     
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = process.env.API_KEY || (import.meta as any)?.env?.VITE_GOOGLE_API_KEY;
+
+      const buildFallbackFromDataset = (clusterId: number, clusterName: string, meanGrade: string | number, totalPoints: number, weight: number) => {
+        const entries = CLUSTER_COURSES[clusterId] || [];
+        const profileTier = totalPoints >= 60 ? 'Strong candidate for degree programmes' : totalPoints >= 40 ? 'May qualify for degree or higher diploma' : 'More suitable for diploma or certificate programmes';
+
+        if (entries.length === 0) {
+          // Generic fallback if dataset is missing for this cluster
+          return `Local Advisor Suggestions (fallback) for ${clusterName}: No curated data available for this cluster.`;
+        }
+
+        const suggestions = entries.slice(0, 10).map((e, idx) => {
+          const uniList = (e.universities || []).slice(0, 3).join(', ');
+          const why = `${profileTier}. With ${totalPoints} points and a cluster weight of ${weight.toFixed(3)}, this student is a good match for ${e.course} at institutions such as ${uniList}.`;
+          return `${idx + 1}. ${e.course}\n   - Universities: ${uniList}\n   - Why: ${why}`;
+        });
+
+        return `Local Advisor Suggestions (fallback) for ${clusterName}:\n\n${suggestions.join('\n\n')}`;
+      };
+
+      if (!apiKey) {
+        const weight = calculationResults.clusterWeights[cluster.id];
+        const totalPoints = calculationResults.totalPoints;
+        const meanGrade = calculationResults.meanGrade;
+        const fallback = buildFallbackFromDataset(cluster.id, cluster.name, meanGrade, totalPoints, weight);
+        setGeneratedCourses(fallback);
+        setIsGeneratingCourses(false);
+        return;
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
       const weight = calculationResults.clusterWeights[cluster.id];
       const totalPoints = calculationResults.totalPoints;
       const meanGrade = calculationResults.meanGrade;
@@ -180,7 +211,16 @@ Guidelines:
       setGeneratedCourses(response.text || 'Unable to generate suggestions at this time.');
     } catch (e) {
       console.error(e);
-      setGeneratedCourses('Error connecting to the Advisor. Please try again.');
+      // On any error, fall back to a local (real) advisor suggestions list so user always gets actionable guidance
+      try {
+        const weight = calculationResults.clusterWeights[cluster.id];
+        const totalPoints = calculationResults.totalPoints;
+        const meanGrade = calculationResults.meanGrade;
+
+        setGeneratedCourses(buildFallbackFromDataset(cluster.id, cluster.name, meanGrade, totalPoints, weight));
+      } catch (ex) {
+        setGeneratedCourses('Error connecting to the Advisor. Please try again.');
+      }
     } finally {
       setIsGeneratingCourses(false);
     }
