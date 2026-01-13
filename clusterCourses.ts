@@ -1,26 +1,54 @@
 export type CourseEntry = {
   course: string;
   universities: string[];
+  level: 'degree' | 'diploma' | 'certificate' | 'artisan';
   note?: string;
 };
 
+/**
+ * Determine course level based on course name
+ */
+const determineCourseLevel = (courseName: string): 'degree' | 'diploma' | 'certificate' | 'artisan' => {
+  const lower = courseName.toLowerCase();
+  if (lower.includes('bachelor') || lower.includes('master') || lower.includes('phd') || lower.includes('degree')) {
+    return 'degree';
+  }
+  if (lower.includes('diploma') || lower.includes('higher diploma')) {
+    return 'diploma';
+  }
+  if (lower.includes('certificate')) {
+    return 'certificate';
+  }
+  // Default to artisan for any unlabeled courses
+  return 'artisan';
+};
+
+/**
+ * Helper to create course entry with auto-detected level
+ */
+const course = (name: string, unis: string[]): CourseEntry => ({
+  course: name,
+  universities: unis,
+  level: determineCourseLevel(name)
+});
+
 export const CLUSTER_COURSES: Record<number, CourseEntry[]> = {
   1: [
-    { course: 'Bachelor of Laws (LL.B)', universities: ['University of Nairobi', 'Kenyatta University', 'Moi University', 'JKUAT'] },
-    { course: 'Bachelor of Laws (Honours)', universities: ['University of Nairobi', 'Moi University', 'Egerton University'] },
-    { course: 'Diploma in Paralegal Studies', universities: ['Kenyatta University', 'Technical University of Kenya', 'Maseno University', 'Kisii University'] },
-    { course: 'Bachelor of Arts (Political Science)', universities: ['University of Nairobi', 'Egerton University', 'Moi University', 'Kenyatta University'] },
-    { course: 'Bachelor of Commerce (Corporate Law)', universities: ['JKUAT', 'Kenyatta University', 'University of Nairobi'] },
-    { course: 'Bachelor of Arts (Sociology and Criminology)', universities: ['Moi University', 'University of Nairobi', 'Maseno University'] },
-    { course: 'Diploma in Human Rights and Governance', universities: ['Kisii University', 'Technical University of Kenya', 'Maseno University'] },
-    { course: 'Certificate in Litigation Support', universities: ['Technical University of Kenya', 'Kisii University', 'Kenya Institute of Legal Studies'] },
-    { course: 'Diploma in Public Administration', universities: ['Maseno University', 'University of Eldoret', 'Technical University of Mombasa'] },
-    { course: 'Bachelor of Arts (Public Law)', universities: ['University of Nairobi', 'Kenyatta University', 'Moi University'] },
-    { course: 'Diploma in Legal Technology', universities: ['Technical University of Kenya', 'Nairobi Institute of Business Studies', 'Maseno University'] },
-    { course: 'Bachelor of Arts (International Relations)', universities: ['University of Nairobi', 'Kenyatta University', 'Egerton University'] },
-    { course: 'Certificate in Immigration Law', universities: ['Nairobi Institute of Business Studies', 'Technical University of Kenya', 'Kenya Institute of Legal Studies'] },
-    { course: 'Diploma in Dispute Resolution', universities: ['Maseno University', 'Kisii University', 'Technical University of Mombasa'] },
-    { course: 'Bachelor of Arts (Labour Law and Industrial Relations)', universities: ['University of Nairobi', 'Moi University', 'JKUAT'] }
+    course('Bachelor of Laws (LL.B)', ['University of Nairobi', 'Kenyatta University', 'Moi University', 'JKUAT']),
+    course('Bachelor of Laws (Honours)', ['University of Nairobi', 'Moi University', 'Egerton University']),
+    course('Diploma in Paralegal Studies', ['Kenyatta University', 'Technical University of Kenya', 'Maseno University', 'Kisii University']),
+    course('Bachelor of Arts (Political Science)', ['University of Nairobi', 'Egerton University', 'Moi University', 'Kenyatta University']),
+    course('Bachelor of Commerce (Corporate Law)', ['JKUAT', 'Kenyatta University', 'University of Nairobi']),
+    course('Bachelor of Arts (Sociology and Criminology)', ['Moi University', 'University of Nairobi', 'Maseno University']),
+    course('Diploma in Human Rights and Governance', ['Kisii University', 'Technical University of Kenya', 'Maseno University']),
+    course('Certificate in Litigation Support', ['Technical University of Kenya', 'Kisii University', 'Kenya Institute of Legal Studies']),
+    course('Diploma in Public Administration', ['Maseno University', 'University of Eldoret', 'Technical University of Mombasa']),
+    course('Bachelor of Arts (Public Law)', ['University of Nairobi', 'Kenyatta University', 'Moi University']),
+    course('Diploma in Legal Technology', ['Technical University of Kenya', 'Nairobi Institute of Business Studies', 'Maseno University']),
+    course('Bachelor of Arts (International Relations)', ['University of Nairobi', 'Kenyatta University', 'Egerton University']),
+    course('Certificate in Immigration Law', ['Nairobi Institute of Business Studies', 'Technical University of Kenya', 'Kenya Institute of Legal Studies']),
+    course('Diploma in Dispute Resolution', ['Maseno University', 'Kisii University', 'Technical University of Mombasa']),
+    course('Bachelor of Arts (Labour Law and Industrial Relations)', ['University of Nairobi', 'Moi University', 'JKUAT'])
   ],
   2: [
     { course: 'Bachelor of Commerce', universities: ['University of Nairobi', 'Kenyatta University', 'Moi University', 'JKUAT', 'Egerton University'] },

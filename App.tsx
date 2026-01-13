@@ -69,19 +69,26 @@ const App: React.FC = () => {
   const calculationResults = useMemo(() => {
     const { meanGrade, totalPoints } = calculateMeanGradeData(selectedGrades);
     const clusterWeights: Record<number, number> = {};
+    const clusterEligibility: Record<number, { isEligible: boolean; missingSubjectNames: string[] }> = {};
+    
     CLUSTERS.forEach(cluster => {
-      let r = 0;
-      let valid = true;
-      for (const group of cluster.subjects) {
-        const groupPoints = group
-          .map(id => selectedGrades[id] ? getPointsFromGrade(selectedGrades[id]) : 0)
-          .sort((a, b) => b - a)[0];
-        if (groupPoints === 0) { valid = false; break; }
-        r += groupPoints;
-      }
-      clusterWeights[cluster.id] = valid ? calculateClusterWeight(r, totalPoints) : 0;
+      // Convert selectedGrades to points format for formula calculator
+      const gradesAsPoints: Record<string, number> = {};
+      Object.entries(selectedGrades).forEach(([subjectId, grade]) => {
+        if (grade) {
+          gradesAsPoints[subjectId] = getPointsFromGrade(grade);
+        }
+      });
+      
+      // Use the official KUCCPS formula
+      const calculation = calculateWeightedClusterPoints(gradesAsPoints, cluster.id);
+      clusterWeights[cluster.id] = calculation.weightedClusterPoints;
+      clusterEligibility[cluster.id] = {
+        isEligible: calculation.isEligible,
+        missingSubjectNames: calculation.missingSubjectNames
+      };
     });
-    return { meanGrade, totalPoints, clusterWeights };
+    return { meanGrade, totalPoints, clusterWeights, clusterEligibility };
   }, [selectedGrades]);
 
   const verifyAccess = () => {
@@ -407,12 +414,29 @@ Guidelines:
                   
                   <div className="space-y-3">
                     <button 
-                        onClick={() => viewCourses(cluster)} 
-                        className="w-full bg-slate-900 dark:bg-green-600 text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-green-500 dark:hover:bg-green-500 shadow-md transition-all active:scale-[0.97] flex items-center justify-center gap-3 border-2 border-transparent hover:border-white/10"
+                        onClick={() => viewCourses(cluster)}
+                        disabled={!calculationResults.clusterEligibility[cluster.id]?.isEligible}
+                        className={`w-full text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-md transition-all active:scale-[0.97] flex items-center justify-center gap-3 border-2 border-transparent ${
+                          calculationResults.clusterEligibility[cluster.id]?.isEligible 
+                            ? 'bg-slate-900 dark:bg-green-600 hover:bg-green-500 dark:hover:bg-green-500 hover:border-white/10 cursor-pointer' 
+                            : 'bg-slate-400 dark:bg-slate-600 cursor-not-allowed opacity-60'
+                        }`}
+                        title={
+                          !calculationResults.clusterEligibility[cluster.id]?.isEligible 
+                            ? `Missing: ${calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')}`
+                            : ''
+                        }
                     >
-                        <i className="fas fa-magic text-[0.8em]"></i>
-                        View My Courses
+                        <i className={`fas ${calculationResults.clusterEligibility[cluster.id]?.isEligible ? 'fa-magic' : 'fa-lock'} text-[0.8em]`}></i>
+                        {calculationResults.clusterEligibility[cluster.id]?.isEligible ? 'View My Courses' : 'Locked'}
                     </button>
+                    {!calculationResults.clusterEligibility[cluster.id]?.isEligible && (
+                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                        <p className="text-[9px] font-bold text-red-700 dark:text-red-300">
+                          🔒 Missing: {calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-green-500/5 rounded-full blur-3xl group-hover:bg-green-500/20 transition-all duration-500"></div>

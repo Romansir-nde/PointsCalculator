@@ -1,4 +1,4 @@
-import { CLUSTERS } from './constants';
+import { CLUSTERS, SUBJECTS } from './constants';
 
 /**
  * KUCCPS Weighted Cluster Points Formula
@@ -24,6 +24,8 @@ export interface ClusterCalculation {
   isEligible: boolean;
   weightedClusterPoints: number;
   competitiveness: 'Highly Competitive' | 'Competitive' | 'Moderately Competitive' | 'Not Eligible';
+  missingRequiredSubjects: string[]; // Subjects not entered from core requirements
+  missingSubjectNames: string[]; // Human-readable names of missing subjects
 }
 
 /**
@@ -47,19 +49,26 @@ export const calculateWeightedClusterPoints = (
       isEligible: false,
       weightedClusterPoints: 0,
       competitiveness: 'Not Eligible',
+      missingRequiredSubjects: [],
+      missingSubjectNames: [],
     };
   }
 
   // Get total points (t)
   const totalPoints = Object.values(selectedGrades).reduce((sum, points) => sum + points, 0);
 
+  // Track missing subjects from cluster requirements
+  const missingRequiredSubjects: string[] = [];
+  const missingSubjectNames: string[] = [];
+  
   // Get sum of cluster-relevant subject points (r)
   let sumR = 0;
   const relevantSubjects: string[] = [];
   const subjectPoints: number[] = [];
 
   // For each subject group in the cluster, take the highest scoring subject
-  for (const subjectGroup of cluster.subjects) {
+  for (let i = 0; i < cluster.subjects.length; i++) {
+    const subjectGroup = cluster.subjects[i];
     const groupPoints = subjectGroup
       .map(subjectId => selectedGrades[subjectId] || 0)
       .sort((a, b) => b - a)[0]; // Get highest score in group
@@ -67,10 +76,20 @@ export const calculateWeightedClusterPoints = (
     if (groupPoints > 0) {
       sumR += groupPoints;
       subjectPoints.push(groupPoints);
-      // Find the subject name (this is simplified, you'd need subject mapping)
+      // Find the subject name
       const subjectWithMaxPoints = subjectGroup.find(id => (selectedGrades[id] || 0) === groupPoints);
       if (subjectWithMaxPoints) {
         relevantSubjects.push(subjectWithMaxPoints);
+      }
+    } else {
+      // Track missing subject group
+      const subjectId = subjectGroup[0]; // Use first subject in group as reference
+      missingRequiredSubjects.push(subjectId);
+      
+      // Get human-readable name from SUBJECTS
+      const subject = SUBJECTS.find(s => s.id === subjectId);
+      if (subject) {
+        missingSubjectNames.push(subject.name);
       }
     }
   }
@@ -82,7 +101,7 @@ export const calculateWeightedClusterPoints = (
   let weightedClusterPoints = 0;
   let isEligible = true;
 
-  if (sumR === 0 || totalPoints === 0) {
+  if (sumR === 0 || totalPoints === 0 || relevantSubjects.length < cluster.subjects.length) {
     isEligible = false;
     weightedClusterPoints = 0;
   } else {
@@ -118,6 +137,8 @@ export const calculateWeightedClusterPoints = (
     isEligible,
     weightedClusterPoints: Math.round(weightedClusterPoints * 100) / 100, // Round to 2 decimals
     competitiveness,
+    missingRequiredSubjects,
+    missingSubjectNames,
   };
 };
 
@@ -135,6 +156,12 @@ export const calculateAllClusters = (selectedGrades: Record<string, number>): Cl
  */
 export const getEligibilityMessage = (calculation: ClusterCalculation): string => {
   if (!calculation.isEligible) {
+    // Check if missing required subjects
+    if (calculation.missingSubjectNames.length > 0) {
+      const missingList = calculation.missingSubjectNames.join(', ');
+      return `🔒 NOT ELIGIBLE - MISSING REQUIRED SUBJECTS\n\n❌ You are ineligible for ${calculation.clusterName} because you did not enter scores for the following required subjects:\n\n${calculation.missingSubjectNames.map((s, i) => `  ${i + 1}. ${s}`).join('\n')}\n\nThese are CORE requirements for this cluster. You MUST have grades in all required subject areas to qualify.\n\nRecommendation: Choose a different cluster that matches your subject choices, or contact your school about adding these subjects.`;
+    }
+
     return `❌ NOT ELIGIBLE\n\nYour cluster weight of ${calculation.weightedClusterPoints.toFixed(2)} points is below the minimum requirement for ${calculation.clusterName}.\n\nMinimum typical requirement: 30+ points\nYour score: ${calculation.weightedClusterPoints.toFixed(2)} points\n\nConsider exploring other clusters or seeking academic guidance.`;
   }
 
