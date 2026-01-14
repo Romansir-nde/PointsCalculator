@@ -585,33 +585,71 @@ Guidelines:
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 pt-6 border-t dark:border-slate-700">
-                  <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-2xl border-2 border-blue-200 dark:border-blue-800">
-                    <h3 className="text-[10px] font-black uppercase text-blue-600 tracking-widest mb-4 flex items-center gap-2">
-                      <i className="fas fa-shield-alt"></i> Change Passkey (Due to Overuse)
-                    </h3>
-                    <div className="space-y-3">
-                      <input 
-                        type="text" 
-                        placeholder="Enter new passkey" 
-                        className="w-full bg-white dark:bg-slate-800 p-3 rounded-lg font-bold outline-none border-2 border-blue-200 dark:border-blue-800 focus:border-blue-500 text-slate-900 dark:text-white text-sm"
-                        value={newPasskeyInput}
-                        onChange={e => setNewPasskeyInput(e.target.value)}
-                      />
-                      <button 
-                        onClick={changePasskey}
-                        className="w-full bg-blue-600 text-white font-black py-3 rounded-lg uppercase tracking-widest hover:bg-blue-700 transition-all text-[10px]"
-                      >
-                        <i className="fas fa-check-circle mr-2"></i> Update Passkey
-                      </button>
+                <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 p-8 rounded-3xl border-2 border-purple-300 dark:border-purple-700/50 shadow-lg">
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <h3 className="text-xs font-black uppercase text-purple-600 dark:text-purple-300 tracking-[0.2em] mb-2 flex items-center gap-2">
+                        <i className="fas fa-lock-open"></i> Security Configuration
+                      </h3>
+                      <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold">Manage access passkey for all users</p>
+                    </div>
+                    <div className="w-12 h-12 bg-purple-600/10 rounded-2xl flex items-center justify-center text-purple-600">
+                      <i className="fas fa-sliders-h text-lg"></i>
                     </div>
                   </div>
 
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-widest mb-3 block">Current Active Passkey</label>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 bg-white dark:bg-slate-900 border-2 border-purple-200 dark:border-purple-800 rounded-xl p-4 font-mono font-black text-lg text-purple-600 dark:text-purple-300 text-center tracking-widest">
+                          {currentRequiredPasskey}
+                        </div>
+                        <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center text-green-600 text-xl">
+                          <i className="fas fa-check-circle"></i>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl opacity-10 blur-lg"></div>
+                      <div className="relative bg-white dark:bg-slate-900 border-2 border-purple-300 dark:border-purple-700 rounded-2xl p-6">
+                        <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-widest mb-3 block">
+                          <i className="fas fa-exclamation-triangle text-orange-500 mr-2"></i> Change To New Passkey
+                        </label>
+                        <div className="flex gap-3">
+                          <input 
+                            type="text" 
+                            placeholder="Enter new passkey (e.g., 5050)" 
+                            className="flex-1 bg-slate-50 dark:bg-slate-800 p-4 rounded-xl font-black outline-none border-2 border-purple-200 dark:border-purple-800 focus:border-purple-500 text-slate-900 dark:text-white text-sm"
+                            value={newPasskeyInput}
+                            onChange={e => setNewPasskeyInput(e.target.value)}
+                          />
+                          <button 
+                            onClick={changePasskey}
+                            className="px-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-black rounded-xl uppercase tracking-widest transition-all shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center gap-2 text-[10px]"
+                          >
+                            <i className="fas fa-sync-alt"></i> Update
+                          </button>
+                        </div>
+                        <p className="text-[8px] text-slate-400 dark:text-slate-500 mt-3 font-semibold">All devices will sync automatically. Previous passkey will be invalidated.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-6">
                   <button 
                     onClick={resetPasskeySequence}
-                    className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-black py-4 rounded-xl uppercase tracking-widest hover:border-red-500 hover:text-red-500 transition-all"
+                    className="w-full bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-800 border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-[10px] font-black py-4 rounded-2xl uppercase tracking-widest hover:from-slate-200 hover:to-slate-100 hover:border-slate-300 dark:hover:border-slate-500 transition-all flex items-center justify-center gap-2"
                   >
-                    Reset Sequence to 2025
+                    <i className="fas fa-redo"></i> Reset to 2025
+                  </button>
+                  <button 
+                    onClick={() => setIsAdminOpen(false)}
+                    className="w-full bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-[10px] font-black py-4 rounded-2xl uppercase tracking-widest transition-all shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <i className="fas fa-times"></i> Close Panel
                   </button>
                 </div>
               </div>
