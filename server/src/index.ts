@@ -29,7 +29,7 @@ mongoose.connect(MONGODB_URI)
     try {
       const Passkey = (await import('./models/Passkey')).default;
       const count = await Passkey.countDocuments();
-      const defaultKey = process.env.DEFAULT_PASSKEY || '2025';
+      const defaultKey = process.env.DEFAULT_PASSKEY || '2030';
       if (count === 0) {
         const pk = new Passkey({ key: defaultKey, createdBy: 'system' });
         await pk.save();

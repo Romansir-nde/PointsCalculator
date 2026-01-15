@@ -45,9 +45,9 @@ cp .env.example .env
 # Configure .env with:
 MONGODB_URI=mongodb://localhost:27017/kuccps
 PORT=4000
-DEFAULT_PASSKEY=2025
+DEFAULT_PASSKEY=2030
 ADMIN_USER=ADMIN
-ADMIN_PASS=2025
+ADMIN_PASS=2030
 
 # Run in development
 npm run dev

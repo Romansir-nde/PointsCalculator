@@ -84,9 +84,9 @@ heroku config:set MONGODB_URI=your_mongodb_atlas_uri -a kuccps-calculator-api
 
 # Set other environment variables
 heroku config:set PORT=4000 -a kuccps-calculator-api
-heroku config:set DEFAULT_PASSKEY=2025 -a kuccps-calculator-api
+heroku config:set DEFAULT_PASSKEY=2030 -a kuccps-calculator-api
 heroku config:set ADMIN_USER=ADMIN -a kuccps-calculator-api
-heroku config:set ADMIN_PASS=2025 -a kuccps-calculator-api
+heroku config:set ADMIN_PASS=2030 -a kuccps-calculator-api
 
 # Build Procfile (create in root/server directory)
 # Procfile content:
@@ -213,7 +213,7 @@ curl http://your-backend-url/api/courses
 # Test admin endpoint (requires headers)
 curl -X GET http://your-backend-url/api/admin/passkey \
   -H "adminuser: ADMIN" \
-  -H "adminpass: 2025"
+  -H "adminpass: 2030"
 ```
 
 ### Test Frontend

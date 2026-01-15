@@ -22,7 +22,7 @@ const App: React.FC = () => {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [adminAuth, setAdminAuth] = useState({ user: '', pass: '', loggedIn: false });
   const [stats, setStats] = useState({ totalCalculations: 0 });
-  const [currentRequiredPasskey, setCurrentRequiredPasskey] = useState('2025');
+  const [currentRequiredPasskey, setCurrentRequiredPasskey] = useState('2030');
   const [newPasskeyInput, setNewPasskeyInput] = useState('');
 
   // Modal states for AI
@@ -96,11 +96,11 @@ const App: React.FC = () => {
     const inputCode = transactionCode.trim();
     setAuthError(null);
     
-    // Constant passkey 2025 - always valid, no usage restrictions
+    // Constant passkey 2030 - always valid, no usage restrictions
     setIsProcessing(true);
 
     setTimeout(() => {
-      const isPasskeyMatch = inputCode === '2025';
+      const isPasskeyMatch = inputCode === '2030';
 
       if (isPasskeyMatch) {
         updateStats();
@@ -121,8 +121,8 @@ const App: React.FC = () => {
   };
 
   const generateNextAdminKey = () => {
-    // Passkey is constant at 2025 - no changes needed
-    alert(`✅ PASSKEY CONFIGURATION\n\n🔐 Current Passkey: 2025\n\nThis is the CONSTANT passkey for all users and devices.\n\nIt will NEVER change automatically.\n\nTo change it, use the "Change Passkey" input field below.`);
+    // Passkey is constant at 2030 - no changes needed
+    alert(`✅ PASSKEY CONFIGURATION\n\n🔐 Current Passkey: 2030\n\nThis is the CONSTANT passkey for all users and devices.\n\nIt will NEVER change automatically.\n\nTo change it, use the "Change Passkey" input field below.`);
   };
 
   const resetForNew = () => {
@@ -133,7 +133,7 @@ const App: React.FC = () => {
   };
 
   const handleAdminLogin = () => {
-    if (adminAuth.user === 'ADMIN' && adminAuth.pass === '2025') {
+    if (adminAuth.user === 'ADMIN' && adminAuth.pass === '2030') {
       setAdminAuth(prev => ({ ...prev, loggedIn: true }));
     } else {
       alert("Invalid Admin Credentials");
@@ -141,10 +141,10 @@ const App: React.FC = () => {
   };
 
   const resetPasskeySequence = () => {
-    if (confirm("🔐 Passkey is CONSTANT at 2025.\n\nIt will work for unlimited users and devices.\n\nNo reset needed - everyone uses: 2025")) {
-      localStorage.setItem('current_passkey', '2025');
-      setCurrentRequiredPasskey('2025');
-      alert("✅ Confirmed: Passkey is 2025 (constant for all devices)");
+    if (confirm("🔐 Passkey is CONSTANT at 2030.\n\nIt will work for unlimited users and devices.\n\nNo reset needed - everyone uses: 2030")) {
+      localStorage.setItem('current_passkey', '2030');
+      setCurrentRequiredPasskey('2030');
+      alert("✅ Confirmed: Passkey is 2030 (constant for all devices)");
     }
   };
 
