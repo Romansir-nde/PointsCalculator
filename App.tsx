@@ -206,53 +206,52 @@ const App: React.FC = () => {
     setShowCourseModal(true);
     setIsGeneratingCourses(true);
     setGeneratedCourses('');
-    
+
+    // Build subjects array from selectedGrades
+    const subjects = Object.entries(selectedGrades).map(([code, grade]) => ({ code: code.toUpperCase(), grade }));
+
     try {
-      const apiKey = process.env.API_KEY || (import.meta as any)?.env?.VITE_GOOGLE_API_KEY;
-
-      if (!apiKey) {
-        const fallback = buildFallbackFromDataset(cluster.id, cluster.name, selectedGrades);
-        setGeneratedCourses(fallback);
-        setIsGeneratingCourses(false);
-        return;
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
-      const weight = calculationResults.clusterWeights[cluster.id];
-      const totalPoints = calculationResults.totalPoints;
-      const meanGrade = calculationResults.meanGrade;
-
-      const prompt = `Student Profile for KUCCPS 2025 Placement:
-- PRIMARY FACTOR: Mean Grade of ${meanGrade}
-- PRIMARY FACTOR: Total Points of ${totalPoints} / 84
-- Target Cluster: "${cluster.name}" (Cluster Group ${cluster.id})
-- Calculated Cluster Weight: ${weight.toFixed(3)}
-
-Task: Act as an expert Kenyan University Placement Consultant. Based STRICTLY on the student's Mean Grade of ${meanGrade} and Total Points of ${totalPoints}, suggest 10 highly realistic degree or diploma courses within the "${cluster.name}" category.
-
-Guidelines:
-1. Ensure the courses listed are actually attainable for someone with a Mean Grade of ${meanGrade}. (e.g., if grade is below C+, focus on Diploma courses).
-2. For each suggestion, provide:
-   - Course Name
-   - 2-3 specific Kenyan Universities/Colleges offering it.
-   - A brief justification explaining how their ${totalPoints} total points and ${weight.toFixed(3)} cluster weight makes them a strong candidate for this specific placement.
-3. Be professional, accurate to current KUCCPS trends, and encouraging.`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt,
+      const resp = await fetch((import.meta as any)?.env?.VITE_API_BASE_URL ? `${(import.meta as any).env.VITE_API_BASE_URL}/api/calculate` : 'http://localhost:4000/api/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subjects })
       });
-      
-      setGeneratedCourses(response.text || 'Unable to generate suggestions at this time.');
+
+      if (!resp.ok) throw new Error('API error');
+      const data = await resp.json();
+
+      // Build a simple HTML table for the modal
+      const rows = data.clusters.map((c: any) => `| Cluster ${c.id} | ${c.name} | ${c.points.toFixed ? c.points.toFixed(3) : c.points} | ${c.missingCore && c.missingCore.length ? 'MISSING CORE: ' + c.missingCore.join(', ') : 'OK'} |`).join('\n');
+
+      let table = `Cluster Points Summary:\n\n`;
+      table += data.clusters.map((c: any, i: number) => `${c.id}. ${c.name} — ${c.points.toFixed ? c.points.toFixed(3) : c.points}${c.missingCore && c.missingCore.length ? ' (MISSING CORE: ' + c.missingCore.join(', ') + ')' : ''}`).join('\n');
+
+      table += `\n\nRecommended summary (per cluster):\n`;
+      table += data.recommendedCourses.map((r: any, idx: number) => `- Cluster ${r.clusterId}: ${r.clusterName} — ${r.points} pts — Eligible: ${r.eligible ? 'YES' : 'NO'} (Top: ${r.topUniversities.map((u:any)=>u.university).join(', ')})`).join('\n');
+
+      setGeneratedCourses(table);
     } catch (e) {
-      console.error('Error in viewCourses:', e);
-      // On any error, fall back to local dataset with real formula
+      console.error('viewCourses API error:', e);
+      // fallback to the existing AI / local dataset flow
       try {
-        const fallback = buildFallbackFromDataset(cluster.id, cluster.name, selectedGrades);
-        setGeneratedCourses(fallback);
+        const apiKey = process.env.API_KEY || (import.meta as any)?.env?.VITE_GOOGLE_API_KEY;
+        if (!apiKey) {
+          const fallback = buildFallbackFromDataset(cluster.id, cluster.name, selectedGrades);
+          setGeneratedCourses(fallback);
+        } else {
+          const ai = new GoogleGenAI({ apiKey });
+          const weight = calculationResults.clusterWeights[cluster.id];
+          const totalPoints = calculationResults.totalPoints;
+          const meanGrade = calculationResults.meanGrade;
+
+          const prompt = `Student Profile for KUCCPS 2025 Placement:\n- PRIMARY FACTOR: Mean Grade of ${meanGrade}\n- PRIMARY FACTOR: Total Points of ${totalPoints} / 84\n- Target Cluster: "${cluster.name}" (Cluster Group ${cluster.id})\n- Calculated Cluster Weight: ${weight.toFixed(3)}\n\nTask: Act as an expert Kenyan University Placement Consultant. Based STRICTLY on the student's Mean Grade of ${meanGrade} and Total Points of ${totalPoints}, suggest 10 highly realistic degree or diploma courses within the "${cluster.name}" category.`;
+
+          const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
+          setGeneratedCourses(response.text || 'Unable to generate suggestions at this time.');
+        }
       } catch (ex) {
         console.error('Error in fallback:', ex);
-        setGeneratedCourses(`📖 Local Advisor Fallback\n\nApologies, the advisor is temporarily unavailable. Please try again in a moment or contact your administrator.\n\nError details: ${ex instanceof Error ? ex.message : 'Unknown error'}`);
+        setGeneratedCourses(`📖 Local Advisor Fallback\n\nApologies, the advisor is temporarily unavailable. Please try again in a moment or contact your administrator.`);
       }
     } finally {
       setIsGeneratingCourses(false);
