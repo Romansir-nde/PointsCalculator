@@ -378,9 +378,12 @@ const App: React.FC = () => {
               {CLUSTERS.map(cluster => (
                 <div key={cluster.id} className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-700 hover:border-green-500 shadow-xl flex flex-col justify-between items-stretch transition-all group relative overflow-hidden">
                   <div className="mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <h3 className="font-black text-[10px] uppercase text-slate-400 tracking-widest">{cluster.name}</h3>
+                    <div className="flex items-center gap-1 mb-3">
+                        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Cluster {cluster.id}</span>
+                    </div>
+                    <div className="flex items-start gap-2 mb-6">
+                        <div className="w-3 h-3 bg-green-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <h3 className="font-black text-xl leading-tight text-slate-900 dark:text-white tracking-tight">{cluster.name}</h3>
                     </div>
                     
                     <div className="flex items-end gap-2">

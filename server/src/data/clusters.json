@@ -1,5 +1,5 @@
 [
-  {"id":1,"name":"Law","subjects":[["eng"],["his","geo","cre"],["mat","bio","phy","che"],["eng","kis","bus","his","geo","cre"]]},
+  {"id":1,"name":"Law & Related","subjects":[["eng"],["his","geo","cre"],["mat","bio","phy","che"],["eng","kis","bus","his","geo","cre"]]},
   {"id":2,"name":"Business & Related","subjects":[["mat"],["eng","kis"],["bio","phy","che","his","geo","cre"],["bus","mat","eco"]]},
   {"id":3,"name":"Arts & Related","subjects":[["eng","kis"],["mat","bio","phy","che"],["his","geo","cre"],["art","mus","fre","ger","eng","kis"]]},
   {"id":4,"name":"GeoScience & Related","subjects":[["mat"],["phy"],["che"],["geo"]]},
