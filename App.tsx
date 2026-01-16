@@ -31,6 +31,10 @@ const App: React.FC = () => {
   const [generatedCourses, setGeneratedCourses] = useState<string>('');
   const [isGeneratingCourses, setIsGeneratingCourses] = useState(false);
 
+  // Summary view state
+  const [showSummary, setShowSummary] = useState(false);
+  const [summaryData, setSummaryData] = useState<Array<{clusterId: number; clusterName: string; courses: string[]; points: number}>>([]);
+
   useEffect(() => {
     const savedCodes = localStorage.getItem('burned_codes');
     const savedStats = localStorage.getItem('app_stats');
@@ -425,6 +429,90 @@ const App: React.FC = () => {
                 </div>
               ))}
             </div>
+
+            {/* GENERAL SUMMARY BUTTON */}
+            <div className="flex justify-center mt-10">
+              <button
+                onClick={() => {
+                  // Collect all eligible clusters and their courses
+                  const eligible = CLUSTERS.filter(c => calculationResults.clusterEligibility[c.id]?.isEligible);
+                  const summary = eligible.map(cluster => ({
+                    clusterId: cluster.id,
+                    clusterName: cluster.name,
+                    courses: CLUSTER_COURSES[cluster.id] || [],
+                    points: calculationResults.clusterWeights[cluster.id]
+                  }));
+                  setSummaryData(summary);
+                  setShowSummary(true);
+                }}
+                className="px-8 py-4 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-black uppercase tracking-wider rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-95 text-sm"
+              >
+                📋 View General Summary - All Eligible Courses
+              </button>
+            </div>
+
+            {/* GENERAL SUMMARY MODAL */}
+            {showSummary && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white dark:bg-slate-800 rounded-[2rem] max-w-4xl w-full max-h-[80vh] overflow-y-auto shadow-2xl">
+                  <div className="sticky top-0 bg-green-600 p-6 flex justify-between items-center">
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">📋 General Summary - Your Eligible Courses</h2>
+                    <button
+                      onClick={() => setShowSummary(false)}
+                      className="text-white hover:bg-green-700 p-2 rounded-lg transition-all"
+                    >
+                      <i className="fas fa-times text-xl"></i>
+                    </button>
+                  </div>
+                  
+                  <div className="p-8 space-y-6">
+                    {summaryData.length === 0 ? (
+                      <div className="text-center py-12">
+                        <p className="text-slate-500 dark:text-slate-400 text-lg">No eligible clusters found. Please check your subject selections.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                          <p className="text-sm font-bold text-blue-700 dark:text-blue-300">
+                            ✅ You are eligible for {summaryData.length} cluster{summaryData.length !== 1 ? 's' : ''} with a total of {summaryData.reduce((sum, s) => sum + s.courses.length, 0)} courses
+                          </p>
+                        </div>
+
+                        {summaryData.map((cluster) => (
+                          <div key={cluster.clusterId} className="border-l-4 border-green-500 pl-6 py-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <h3 className="font-black text-lg text-slate-900 dark:text-white">
+                                  Cluster {cluster.clusterId}: {cluster.clusterName}
+                                </h3>
+                                <p className="text-sm font-bold text-green-600 dark:text-green-400">
+                                  Points: {cluster.points.toFixed(3)} | Courses: {cluster.courses.length}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {cluster.courses.map((course, idx) => (
+                                <div key={idx} className="bg-white dark:bg-slate-800 p-3 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                  ✓ {course}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+
+                        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mt-8">
+                          <h4 className="font-black text-green-900 dark:text-green-100 mb-2">📌 Recommendation</h4>
+                          <p className="text-sm text-green-800 dark:text-green-200">
+                            You have secured access to all eligible courses above. Select your top choice based on your career interests and the competitiveness of the programme. Universities will rank candidates based on cluster points and subject performance.
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* CAREER GUIDANCE AND PRO TIPS SECTION */}
             <div className="mt-20 space-y-10">

@@ -65,6 +65,7 @@ export const calculateWeightedClusterPoints = (
   let sumR = 0;
   const relevantSubjects: string[] = [];
   const subjectPoints: number[] = [];
+  let hasMissingCoreSubjects = false;
 
   // For each subject group in the cluster, take the highest scoring subject
   for (let i = 0; i < cluster.subjects.length; i++) {
@@ -82,16 +83,13 @@ export const calculateWeightedClusterPoints = (
         relevantSubjects.push(subjectWithMaxPoints);
       }
     } else {
-      // Only mark as missing if this is a CORE subject (single-item array = mandatory)
-      if (subjectGroup.length === 1) {
-        const coreSubjectId = subjectGroup[0];
-        missingRequiredSubjects.push(coreSubjectId);
-        
-        // Get human-readable name from SUBJECTS
-        const subject = SUBJECTS.find(s => s.id === coreSubjectId);
-        if (subject) {
-          missingSubjectNames.push(subject.name);
-        }
+      // Mark as missing - STRICTER CHECK: ANY subject group with no score means ineligible
+      hasMissingCoreSubjects = true;
+      
+      // Get human-readable name from SUBJECTS for first subject in group
+      const subject = SUBJECTS.find(s => s.id === subjectGroup[0]);
+      if (subject) {
+        missingSubjectNames.push(`${subject.name} (or ${subjectGroup.length > 1 ? 'alternatives' : 'required'})`);
       }
     }
   }
@@ -103,8 +101,8 @@ export const calculateWeightedClusterPoints = (
   let weightedClusterPoints = 0;
   let isEligible = true;
 
-  // Only ineligible if CORE subjects are missing or score is below threshold
-  if (missingSubjectNames.length > 0 || sumR === 0 || totalPoints === 0) {
+  // Only ineligible if ANY subject group has no score or score is below threshold
+  if (hasMissingCoreSubjects || sumR === 0 || totalPoints === 0) {
     isEligible = false;
     weightedClusterPoints = 0;
   } else {
@@ -112,6 +110,11 @@ export const calculateWeightedClusterPoints = (
     const ratio = (sumR / R) * (totalPoints / T);
     const sqrtRatio = Math.sqrt(ratio);
     weightedClusterPoints = sqrtRatio * 48;
+    
+    // CAP AT 48 - Cluster points cannot exceed 48
+    if (weightedClusterPoints > 48) {
+      weightedClusterPoints = 48;
+    }
   }
 
   // Determine competitiveness based on typical KUCCPS cutoffs
