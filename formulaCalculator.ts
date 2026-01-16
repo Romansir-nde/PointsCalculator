@@ -103,6 +103,7 @@ export const calculateWeightedClusterPoints = (
 
   // Only ineligible if ANY subject group has no score or score is below threshold
   if (hasMissingCoreSubjects || sumR === 0 || totalPoints === 0) {
+    // Set points to 00 but ALLOW VIEW ACCESS
     isEligible = false;
     weightedClusterPoints = 0;
   } else {

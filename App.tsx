@@ -401,25 +401,21 @@ const App: React.FC = () => {
                   <div className="space-y-3">
                     <button 
                         onClick={() => viewCourses(cluster)}
-                        disabled={!calculationResults.clusterEligibility[cluster.id]?.isEligible}
-                        className={`w-full text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-md transition-all active:scale-[0.97] flex items-center justify-center gap-3 border-2 border-transparent ${
-                          calculationResults.clusterEligibility[cluster.id]?.isEligible 
-                            ? 'bg-slate-900 dark:bg-green-600 hover:bg-green-500 dark:hover:bg-green-500 hover:border-white/10 cursor-pointer' 
-                            : 'bg-slate-400 dark:bg-slate-600 cursor-not-allowed opacity-60'
-                        }`}
+                        disabled={false}
+                        className="w-full text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-md transition-all active:scale-[0.97] flex items-center justify-center gap-3 border-2 border-transparent bg-slate-900 dark:bg-green-600 hover:bg-green-500 dark:hover:bg-green-500 hover:border-white/10 cursor-pointer"
                         title={
                           !calculationResults.clusterEligibility[cluster.id]?.isEligible 
-                            ? `Missing: ${calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')}`
-                            : ''
+                            ? `View courses (Missing: ${calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')})`
+                            : 'View available courses for this cluster'
                         }
                     >
-                        <i className={`fas ${calculationResults.clusterEligibility[cluster.id]?.isEligible ? 'fa-magic' : 'fa-lock'} text-[0.8em]`}></i>
-                        {calculationResults.clusterEligibility[cluster.id]?.isEligible ? 'View My Courses' : 'Locked'}
+                        <i className="fas fa-book-open text-[0.8em]"></i>
+                        View Courses
                     </button>
                     {!calculationResults.clusterEligibility[cluster.id]?.isEligible && (
-                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                        <p className="text-[9px] font-bold text-red-700 dark:text-red-300">
-                          🔒 Missing: {calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')}
+                      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                        <p className="text-[9px] font-bold text-amber-700 dark:text-amber-300">
+                          ⚠️ Missing subjects: {calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')}
                         </p>
                       </div>
                     )}
@@ -823,6 +819,25 @@ const App: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Ineligibility Warning (if applicable) */}
+                  {!calculationResults.clusterEligibility[activeCluster.id]?.isEligible && (
+                    <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-lg p-6">
+                      <h3 className="font-black text-lg text-red-900 dark:text-red-100 mb-3 flex items-center gap-2">
+                        <i className="fas fa-exclamation-triangle"></i>
+                        ⚠️ YOU ARE NOT CURRENTLY ELIGIBLE FOR THIS CLUSTER
+                      </h3>
+                      <p className="text-sm text-red-800 dark:text-red-200 mb-3">
+                        Your current subject selections do not meet all requirements for this cluster.
+                      </p>
+                      <p className="text-sm font-bold text-red-800 dark:text-red-200">
+                        Missing: {calculationResults.clusterEligibility[activeCluster.id]?.missingSubjectNames.join(', ')}
+                      </p>
+                      <p className="text-[12px] text-red-700 dark:text-red-300 mt-3">
+                        You can still view the available courses, but you will need to have qualifying subjects in all groups to be eligible for placement in this cluster.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Your Performance Section */}
                   <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 rounded-lg p-6">
                     <h3 className="font-black text-lg text-green-900 dark:text-green-100 mb-4 flex items-center gap-2">
@@ -832,7 +847,9 @@ const App: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="bg-white dark:bg-slate-700/50 p-4 rounded-lg text-center">
                         <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Cluster Points</p>
-                        <p className="text-3xl font-black text-green-600">{calculationResults.clusterWeights[activeCluster.id].toFixed(3)}</p>
+                        <p className={`text-3xl font-black ${calculationResults.clusterWeights[activeCluster.id] === 0 ? 'text-gray-500' : 'text-green-600'}`}>
+                          {String(calculationResults.clusterWeights[activeCluster.id]).padStart(2, '0')}
+                        </p>
                       </div>
                       <div className="bg-white dark:bg-slate-700/50 p-4 rounded-lg text-center">
                         <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Total KCSE Points</p>
