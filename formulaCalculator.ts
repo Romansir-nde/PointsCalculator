@@ -142,13 +142,8 @@ export const calculateWeightedClusterPoints = (
       16: 39,  // History & Related
       17: 40,  // Agriculture, Food Science & Env
       18: 40,  // Geography & Natural Resources
-      
-      // Other clusters - max 39-40
-      19: 38,  // French & Related
-      20: 38,  // German & Related
-      21: 39,  // Music & Related
-      22: 41,  // Education Science & Arts
-      23: 38,  // Religious Studies & Related
+      19: 41,  // Education Science & Arts
+      20: 38,  // Religious Studies & Related
     };
     
     const maxPointsForCluster = realWorldCaps[clusterId] || 41;
