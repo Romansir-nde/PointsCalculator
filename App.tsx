@@ -474,7 +474,7 @@ const App: React.FC = () => {
                       <>
                         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                           <p className="text-sm font-bold text-blue-700 dark:text-blue-300">
-                            ✅ You are eligible for {summaryData.length} cluster{summaryData.length !== 1 ? 's' : ''} with a total of {summaryData.reduce((sum, s) => sum + s.courses.length, 0)} courses
+                            ✅ You are eligible for <span className="font-black">{summaryData.length}</span> cluster{summaryData.length !== 1 ? 's' : ''} with <span className="font-black">{summaryData.reduce((sum: number, s: any) => sum + (Array.isArray(s.courses) ? s.courses.length : 0), 0)}</span> total courses
                           </p>
                         </div>
 
@@ -486,17 +486,34 @@ const App: React.FC = () => {
                                   Cluster {cluster.clusterId}: {cluster.clusterName}
                                 </h3>
                                 <p className="text-sm font-bold text-green-600 dark:text-green-400">
-                                  Points: {cluster.points.toFixed(3)} | Courses: {cluster.courses.length}
+                                  Points: {cluster.points.toFixed(3)} | Courses: {Array.isArray(cluster.courses) ? cluster.courses.length : 0}
                                 </p>
                               </div>
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                              {cluster.courses.map((course, idx) => (
-                                <div key={idx} className="bg-white dark:bg-slate-800 p-3 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                                  ✓ {course}
+                              {Array.isArray(cluster.courses) && cluster.courses.length > 0 ? (
+                                cluster.courses.map((courseItem: any, idx: number) => (
+                                  <div key={idx} className="bg-white dark:bg-slate-800 p-3 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                    <div>✓ {typeof courseItem === 'string' ? courseItem : courseItem.course}</div>
+                                    {courseItem.universities && (
+                                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                        {Array.isArray(courseItem.universities) ? courseItem.universities.slice(0, 2).join(', ') : ''}
+                                        {courseItem.universities && courseItem.universities.length > 2 ? '...' : ''}
+                                      </div>
+                                    )}
+                                    {courseItem.level && (
+                                      <div className="text-xs font-bold text-green-600 dark:text-green-400 mt-1 uppercase">
+                                        {courseItem.level}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="col-span-full text-center py-4 text-slate-500">
+                                  No courses available for this cluster
                                 </div>
-                              ))}
+                              )}
                             </div>
                           </div>
                         ))}
