@@ -765,33 +765,144 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* AI Course Modal */}
-      {showCourseModal && (
+      {/* KUCCPS Portal Course Modal */}
+      {showCourseModal && activeCluster && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
-          <div className="bg-white dark:bg-slate-800 w-full max-w-3xl rounded-[2.5rem] overflow-hidden flex flex-col max-h-[85vh] shadow-2xl">
-            <div className="p-8 border-b dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
-              <div>
-                <span className="text-[10px] font-black text-green-600 uppercase tracking-[0.3em] mb-1 block">Admin Course Advisor</span>
-                <h2 className="text-xl font-black uppercase tracking-tight text-slate-800 dark:text-white">{activeCluster?.name}</h2>
+          <div className="bg-white dark:bg-slate-800 w-full max-w-4xl rounded-[2.5rem] overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
+            
+            {/* Header */}
+            <div className="p-8 border-b dark:border-slate-700 bg-gradient-to-r from-green-600 to-green-500 flex justify-between items-center sticky top-0">
+              <div className="text-white">
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] mb-1 block opacity-90">Cluster Placement Portal</span>
+                <h2 className="text-3xl font-black uppercase tracking-tight">Cluster {activeCluster.id}: {activeCluster.name}</h2>
               </div>
-              <button onClick={() => setShowCourseModal(false)} className="w-10 h-10 rounded-full hover:bg-white dark:hover:bg-slate-700 flex items-center justify-center text-slate-400 transition-colors">
+              <button onClick={() => setShowCourseModal(false)} className="w-10 h-10 rounded-full hover:bg-white/20 flex items-center justify-center text-white transition-colors text-xl">
                 <i className="fas fa-times"></i>
               </button>
             </div>
-            <div className="p-8 overflow-y-auto whitespace-pre-wrap font-medium leading-relaxed text-slate-700 dark:text-slate-300 scrollbar-thin">
+
+            {/* Content */}
+            <div className="overflow-y-auto flex-1">
               {isGeneratingCourses ? (
                 <div className="flex flex-col items-center justify-center py-24 gap-4">
                   <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="animate-pulse font-black text-xs uppercase tracking-widest text-slate-400 text-center">Finding qualifying courses...</p>
+                  <p className="animate-pulse font-black text-xs uppercase tracking-widest text-slate-400 text-center">Loading cluster information...</p>
                 </div>
               ) : (
-                <div className="prose dark:prose-invert max-w-none">
-                  {generatedCourses}
+                <div className="p-8 space-y-8">
+                  
+                  {/* Minimum Requirements Section */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-lg p-6">
+                    <h3 className="font-black text-lg text-blue-900 dark:text-blue-100 mb-4 flex items-center gap-2">
+                      <i className="fas fa-clipboard-list"></i>
+                      MINIMUM SUBJECT REQUIREMENTS
+                    </h3>
+                    <div className="space-y-3">
+                      {activeCluster.subjects.map((group: string[], idx: number) => {
+                        const subjectNames = group.map(id => {
+                          const subj = SUBJECTS.find(s => s.id === id);
+                          return subj ? subj.name : id.toUpperCase();
+                        });
+                        
+                        return (
+                          <div key={idx} className="bg-white dark:bg-slate-700/50 p-4 rounded-lg">
+                            <p className="font-black text-slate-800 dark:text-white text-sm">
+                              Group {idx + 1}:
+                              <span className="font-semibold text-green-600 dark:text-green-400 ml-2">
+                                {subjectNames.join(' OR ')}
+                              </span>
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
+                      <p className="text-[12px] font-bold text-yellow-800 dark:text-yellow-200">
+                        ⚠️ You must have at least ONE subject from EACH group to qualify for this cluster
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Your Performance Section */}
+                  <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 rounded-lg p-6">
+                    <h3 className="font-black text-lg text-green-900 dark:text-green-100 mb-4 flex items-center gap-2">
+                      <i className="fas fa-chart-line"></i>
+                      YOUR PLACEMENT SCORE FOR THIS CLUSTER
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-white dark:bg-slate-700/50 p-4 rounded-lg text-center">
+                        <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Cluster Points</p>
+                        <p className="text-3xl font-black text-green-600">{calculationResults.clusterWeights[activeCluster.id].toFixed(3)}</p>
+                      </div>
+                      <div className="bg-white dark:bg-slate-700/50 p-4 rounded-lg text-center">
+                        <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Total KCSE Points</p>
+                        <p className="text-3xl font-black text-blue-600">{calculationResults.totalPoints}</p>
+                      </div>
+                      <div className="bg-white dark:bg-slate-700/50 p-4 rounded-lg text-center">
+                        <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Mean Grade</p>
+                        <p className="text-3xl font-black text-purple-600">{calculationResults.meanGrade}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Available Courses Section */}
+                  <div className="bg-slate-50 dark:bg-slate-700/30 border-l-4 border-slate-500 rounded-lg p-6">
+                    <h3 className="font-black text-lg text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                      <i className="fas fa-book-open"></i>
+                      AVAILABLE COURSES IN THIS CLUSTER
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {CLUSTER_COURSES[activeCluster.id] && CLUSTER_COURSES[activeCluster.id].length > 0 ? (
+                        CLUSTER_COURSES[activeCluster.id].map((course: any, idx: number) => (
+                          <div key={idx} className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-green-400 transition-colors">
+                            <p className="font-black text-slate-900 dark:text-white text-sm mb-2">
+                              ✓ {course.course}
+                            </p>
+                            <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                              <span className="font-bold">Level:</span> {course.level}
+                            </p>
+                            {course.universities && course.universities.length > 0 && (
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                                <span className="font-bold">Universities:</span><br/>
+                                {course.universities.slice(0, 3).join(', ')}
+                                {course.universities.length > 3 ? '...' : ''}
+                              </p>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="col-span-full text-center text-slate-500 py-8">No courses available for this cluster</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Recommendation */}
+                  <div className="bg-purple-50 dark:bg-purple-900/20 border-l-4 border-purple-500 rounded-lg p-6">
+                    <h3 className="font-black text-lg text-purple-900 dark:text-purple-100 mb-3 flex items-center gap-2">
+                      <i className="fas fa-lightbulb"></i>
+                      KUCCPS PLACEMENT ADVICE
+                    </h3>
+                    <p className="text-sm text-purple-800 dark:text-purple-200 leading-relaxed">
+                      Your cluster score of <strong>{calculationResults.clusterWeights[activeCluster.id].toFixed(3)} points</strong> makes you eligible for this cluster. 
+                      Select your preferred course from the list above. Universities will rank candidates based on cluster points and subject performance. 
+                      Courses marked as '<strong>degree</strong>' are bachelor programs, '<strong>diploma</strong>' are 2-3 year programs, 
+                      and '<strong>certificate</strong>' are specialized short courses.
+                    </p>
+                  </div>
+
                 </div>
               )}
             </div>
-            <div className="p-6 border-t dark:border-slate-700 flex justify-end">
-              <button onClick={() => setShowCourseModal(false)} className="bg-green-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-green-600/20 transition-all hover:bg-green-700">Close Advisor</button>
+
+            {/* Footer */}
+            <div className="p-6 border-t dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-3">
+              <button onClick={() => setShowCourseModal(false)} className="bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600 text-slate-900 dark:text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
+                Close
+              </button>
+              <button onClick={() => setShowCourseModal(false)} className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-green-600/20 transition-all">
+                <i className="fas fa-check mr-2"></i>
+                Confirm Selection
+              </button>
             </div>
           </div>
         </div>
