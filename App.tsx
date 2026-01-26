@@ -265,7 +265,7 @@ const App: React.FC = () => {
   if (showSuccessTick) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-slate-900">
-        <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center animate-bounce shadow-2xl">
+        <div className="w-24 h-24 bg-red-500 rounded-full flex items-center justify-center animate-bounce shadow-2xl">
           <i className="fas fa-check text-white text-4xl"></i>
         </div>
         <h2 className="mt-8 text-2xl font-black text-slate-800 dark:text-white uppercase tracking-widest text-center">Authenticated</h2>
@@ -274,24 +274,24 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className={`${isDarkMode ? 'dark bg-slate-900 text-white' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-green-50 text-slate-900'} min-h-screen pb-12 transition-colors flex flex-col relative`}
+    <div className={`${isDarkMode ? 'dark bg-slate-900 text-white' : 'bg-gradient-to-br from-white via-red-50 to-rose-50 text-slate-900'} min-h-screen pb-12 transition-colors flex flex-col relative`}
     style={{
-      backgroundImage: !isDarkMode ? `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 40 0 L 0 0 0 40' fill='none' stroke='rgba(0,0,0,0.03)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23grid)'/%3E%3C/svg%3E")` : undefined,
+      backgroundImage: !isDarkMode ? `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 40 0 L 0 0 0 40' fill='none' stroke='rgba(220,38,38,0.05)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23grid)'/%3E%3C/svg%3E")` : undefined,
       backgroundAttachment: 'fixed'
     }}>
-      {/* Decorative elements for graduate forum theme */}
+      {/* Decorative elements for graduate forum theme - RED/WHITE BLEND */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-10 left-10 w-72 h-72 bg-green-200 dark:bg-green-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-blue-200 dark:bg-blue-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-yellow-200 dark:bg-yellow-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-10 left-10 w-72 h-72 bg-red-200 dark:bg-red-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+        <div className="absolute top-40 right-10 w-72 h-72 bg-rose-200 dark:bg-rose-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-200 dark:bg-pink-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '4s'}}></div>
       </div>
 
-      {/* Graduation forum banner */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-600 via-blue-600 to-green-600"></div>
+      {/* Graduation forum banner - RED/WHITE theme */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-rose-600 to-red-600"></div>
       <nav className="sticky top-0 z-50 bg-white dark:bg-slate-800 p-4 shadow-sm flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
         <div className="flex items-center gap-2">
-          <div className="bg-green-600 text-white p-2 rounded-lg"><i className="fas fa-bolt"></i></div>
-          <h1 className="text-xl font-black tracking-tighter uppercase">KUCCPS<span className="text-green-600">PRO</span></h1>
+          <div className="bg-gradient-to-r from-red-600 to-rose-600 text-white p-2 rounded-lg"><i className="fas fa-bolt"></i></div>
+          <h1 className="text-xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-rose-700\">KUCCPS<span className="text-red-600\">PRO</span></h1>
         </div>
         <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center transition-transform active:scale-90">
           <i className={`fas ${isDarkMode ? 'fa-sun text-yellow-400' : 'fa-moon text-slate-600'}`}></i>
@@ -300,59 +300,68 @@ const App: React.FC = () => {
 
       <main className="max-w-4xl mx-auto w-full px-4 mt-8 flex-1 relative z-10">
         {step === AppStep.Input && (
-          <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-8 shadow-xl border border-slate-100 dark:border-slate-700 space-y-8">
-            <h2 className="text-3xl font-black uppercase tracking-tight">Grade Entry</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {SUBJECTS.map(subj => (
-                <div key={subj.id}>
-                  <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">{subj.name}</label>
-                  <select
-                    className="w-full bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 rounded-xl p-3 font-bold transition-all outline-none text-slate-900 dark:text-white"
-                    value={selectedGrades[subj.id] || ''}
-                    onChange={(e) => handleGradeChange(subj.id, e.target.value as Grade)}
-                  >
-                    <option value="">Select Grade</option>
-                    {Object.keys(GRADE_POINTS).map(g => <option key={g} value={g}>{g}</option>)}
-                  </select>
-                </div>
-              ))}
+          <div className="relative min-h-screen rounded-[2.5rem] p-8 shadow-xl border border-slate-100 dark:border-slate-700 space-y-8 overflow-hidden" style={{
+            backgroundImage: 'url("data:image/svg+xml,%3Csvg width="1200" height="800" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"%3E%3Cdefs%3E%3ClinearGradient id="grad1" x1="0%25" y1="0%25" x2="100%25" y2="100%25"%3E%3Cstop offset="0%25" style="stop-color:%23dc2626;stop-opacity:0.9" /%3E%3Cstop offset="50%25" style="stop-color:%23f87171;stop-opacity:0.7" /%3E%3Cstop offset="100%25" style="stop-color:%23fca5a5;stop-opacity:0.5" /%3E%3C/linearGradient%3E%3ClinearGradient id="grad2" x1="100%25" y1="0%25" x2="0%25" y2="100%25"%3E%3Cstop offset="0%25" style="stop-color:%23ffffff;stop-opacity:0.8" /%3E%3Cstop offset="50%25" style="stop-color:%23f5f5f5;stop-opacity:0.6" /%3E%3Cstop offset="100%25" style="stop-color:%23fef2f2;stop-opacity:0.4" /%3E%3C/linearGradient%3E%3Cfilter id="blur"%3E%3CfeGaussianBlur in="SourceGraphic" stdDeviation="3" /%3E%3C/filter%3E%3C/defs%3E%3Crect width="1200" height="800" fill="url(%23grad1)" /%3E%3Crect width="1200" height="800" fill="url(%23grad2)" opacity="0.6" /%3E%3Ccircle cx="100" cy="100" r="200" fill="%23fecaca" opacity="0.3" filter="url(%23blur)" /%3E%3Ccircle cx="1100" cy="700" r="250" fill="%23dc2626" opacity="0.15" filter="url(%23blur)" /%3E%3Ccircle cx="600" cy="400" r="300" fill="%23ffffff" opacity="0.1" filter="url(%23blur)" /%3E%3Cpath d="M0,0 Q300,100 600,50 T1200,100 L1200,0 Z" fill="%23ffffff" opacity="0.2" /%3E%3Cpath d="M0,800 Q300,700 600,750 T1200,700 L1200,800 Z" fill="%23dc2626" opacity="0.15" /%3E%3C/svg%3E")' as any,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed'
+          }}>
+            <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 via-white/30 to-rose-300/20 rounded-[2.5rem] pointer-events-none"></div>
+            <div className="absolute inset-0 backdrop-blur-sm rounded-[2.5rem] pointer-events-none"></div>
+            <div className="relative z-20 bg-white/95 dark:bg-red-900/70 dark:backdrop-blur-md rounded-[2.5rem] p-8 shadow-2xl border border-red-200/50 dark:border-red-600/50 space-y-8">
+              <h2 className="text-4xl font-black uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-900">Grade Entry</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {SUBJECTS.map(subj => (
+                  <div key={subj.id}>
+                    <label className="text-[10px] font-black uppercase text-red-600 dark:text-red-400 block mb-2">{subj.name}</label>
+                    <select
+                      className="w-full bg-white dark:bg-red-950 border-2 border-transparent focus:border-red-500 dark:focus:border-red-400 rounded-xl p-3 font-bold transition-all outline-none text-slate-900 dark:text-white shadow-md hover:shadow-lg"
+                      value={selectedGrades[subj.id] || ''}
+                      onChange={(e) => handleGradeChange(subj.id, e.target.value as Grade)}
+                    >
+                      <option value="">Select Grade</option>
+                      {Object.keys(GRADE_POINTS).map(g => <option key={g} value={g}>{g}</option>)}
+                    </select>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => setStep(AppStep.Payment)}
+                disabled={Object.keys(selectedGrades).length < 7}
+                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-black py-4 rounded-xl shadow-lg transition-all disabled:opacity-50 uppercase tracking-widest active:scale-[0.98]"
+              >
+                Next: Verify Access
+              </button>
             </div>
-            <button
-              onClick={() => setStep(AppStep.Payment)}
-              disabled={Object.keys(selectedGrades).length < 7}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-black py-4 rounded-xl shadow-lg transition-all disabled:opacity-50 uppercase tracking-widest"
-            >
-              Next: Verify Access
-            </button>
           </div>
         )}
 
         {step === AppStep.Payment && (
-          <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-8 shadow-xl border border-slate-100 dark:border-slate-700 space-y-10 animate-in slide-in-from-bottom-4 text-center overflow-hidden">
+          <div className="bg-gradient-to-br from-white to-red-50 dark:from-red-900 dark:to-slate-900 rounded-[2.5rem] p-8 shadow-xl border-2 border-red-200 dark:border-red-700 space-y-10 animate-in slide-in-from-bottom-4 text-center overflow-hidden">
             <div className="space-y-4">
-              <h2 className="text-3xl font-black uppercase tracking-tight">Access Verification</h2>
+              <h2 className="text-3xl font-black uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-900">Access Verification</h2>
               
               {authError ? (
-                <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-2xl border-2 border-red-500/50 animate-bounce">
-                    <p className="font-black text-red-600 dark:text-red-400 text-sm tracking-widest uppercase flex items-center justify-center gap-2">
+                <div className="bg-red-100 dark:bg-red-900/40 p-6 rounded-2xl border-2 border-red-500 animate-bounce shadow-lg">
+                    <p className="font-black text-red-700 dark:text-red-300 text-sm tracking-widest uppercase flex items-center justify-center gap-2">
                         <i className="fas fa-exclamation-triangle"></i>
                         {authError}
                     </p>
                 </div>
               ) : (
-                <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700">
-                    <p className="font-bold text-slate-500 dark:text-slate-400 text-sm">Please enter the Passkey provided by the administrator.</p>
+                <div className="bg-red-50 dark:bg-red-950/30 p-6 rounded-2xl border-2 border-dashed border-red-300 dark:border-red-600">
+                    <p className="font-bold text-red-700 dark:text-red-300 text-sm">Please enter the Passkey provided by the administrator.</p>
                 </div>
               )}
             </div>
 
             <div className="space-y-6">
               <div className="space-y-2 text-left">
-                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest block ml-1">Current Passkey</label>
+                <label className="text-[10px] font-black uppercase text-red-600 dark:text-red-400 tracking-widest block ml-1">Current Passkey</label>
                 <input
                   type="text"
                   placeholder="Enter Passkey"
-                  className={`w-full bg-slate-50 dark:bg-slate-900 rounded-2xl p-6 font-black outline-none border-2 transition-all uppercase tracking-[0.5em] text-slate-900 dark:text-white text-center text-4xl shadow-inner ${authError ? 'border-red-500 ring-4 ring-red-500/10' : 'border-transparent focus:border-green-500'}`}
+                  className={`w-full bg-white dark:bg-red-950 rounded-2xl p-6 font-black outline-none border-2 transition-all uppercase tracking-[0.5em] text-slate-900 dark:text-white text-center text-4xl shadow-inner ${authError ? 'border-red-600 ring-4 ring-red-500/20' : 'border-red-200 dark:border-red-600 focus:border-red-600 dark:focus:border-red-400'}`}
                   value={transactionCode}
                   onChange={e => {
                     setTransactionCode(e.target.value);
@@ -363,7 +372,7 @@ const App: React.FC = () => {
               <button
                 onClick={verifyAccess}
                 disabled={isProcessing || !transactionCode}
-                className={`w-full text-white font-black py-5 rounded-2xl shadow-xl transition-all uppercase tracking-widest text-lg active:scale-[0.98] ${authError ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
+                className={`w-full text-white font-black py-5 rounded-2xl shadow-xl transition-all uppercase tracking-widest text-lg active:scale-[0.98] ${authError ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800' : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:opacity-50'}`}
               >
                 {isProcessing ? (
                     <div className="flex items-center justify-center gap-3">
@@ -380,34 +389,34 @@ const App: React.FC = () => {
 
         {step === AppStep.Results && (
           <div className="space-y-8 animate-in zoom-in-95">
-            <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-10 shadow-xl border-t-[12px] border-green-600 flex flex-col md:flex-row justify-between items-center">
+            <div className="bg-gradient-to-r from-white to-red-50 dark:from-red-900 dark:to-slate-900 rounded-[2.5rem] p-10 shadow-xl border-t-[12px] border-red-600 flex flex-col md:flex-row justify-between items-center">
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mean Grade</p>
-                <h2 className="text-8xl font-black text-green-600 tracking-tighter">{calculationResults.meanGrade}</h2>
+                <p className="text-[10px] font-black text-red-600 dark:text-red-400 uppercase tracking-widest">Mean Grade</p>
+                <h2 className="text-8xl font-black text-red-600 dark:text-red-500 tracking-tighter">{calculationResults.meanGrade}</h2>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Points</p>
-                <h2 className="text-8xl font-black tracking-tighter">{calculationResults.totalPoints}</h2>
+                <p className="text-[10px] font-black text-red-600 dark:text-red-400 uppercase tracking-widest">Total Points</p>
+                <h2 className="text-8xl font-black text-red-700 dark:text-red-400 tracking-tighter">{calculationResults.totalPoints}</h2>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {CLUSTERS.map(cluster => (
-                <div key={cluster.id} className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-700 hover:border-green-500 shadow-xl flex flex-col justify-between items-stretch transition-all group relative overflow-hidden">
+                <div key={cluster.id} className="bg-white dark:bg-red-900/30 p-8 rounded-[2.5rem] border-2 border-red-200 dark:border-red-600 hover:border-red-500 shadow-xl flex flex-col justify-between items-stretch transition-all group relative overflow-hidden">
                   <div className="mb-6">
                     <div className="flex items-center gap-1 mb-3">
-                        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Cluster {cluster.id}</span>
+                        <span className="text-[9px] font-bold text-red-600 dark:text-red-400 uppercase tracking-widest">Cluster {cluster.id}</span>
                     </div>
                     <div className="flex items-start gap-2 mb-6">
-                        <div className="w-3 h-3 bg-green-500 rounded-full mt-1 flex-shrink-0"></div>
+                        <div className="w-3 h-3 bg-red-500 rounded-full mt-1 flex-shrink-0"></div>
                         <h3 className="font-black text-xl leading-tight text-slate-900 dark:text-white tracking-tight">{cluster.name}</h3>
                     </div>
                     
                     <div className="flex items-end gap-2">
-                        <p className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
+                        <p className="text-6xl font-black text-red-600 dark:text-red-400 tracking-tighter leading-none">
                             {calculationResults.clusterWeights[cluster.id].toFixed(3)}
                         </p>
-                        <span className="text-[10px] font-black text-green-600 uppercase mb-2">Weight</span>
+                        <span className="text-[10px] font-black text-red-600 dark:text-red-400 uppercase mb-2">Weight</span>
                     </div>
                   </div>
                   
@@ -415,7 +424,7 @@ const App: React.FC = () => {
                     <button 
                         onClick={() => viewCourses(cluster)}
                         disabled={false}
-                        className="w-full text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-md transition-all active:scale-[0.97] flex items-center justify-center gap-3 border-2 border-transparent bg-slate-900 dark:bg-green-600 hover:bg-green-500 dark:hover:bg-green-500 hover:border-white/10 cursor-pointer"
+                        className="w-full text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-md transition-all active:scale-[0.97] flex items-center justify-center gap-3 border-2 border-transparent bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 dark:hover:border-white/10 cursor-pointer"
                         title={
                           !calculationResults.clusterEligibility[cluster.id]?.isEligible 
                             ? `View courses (Missing: ${calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')})`
@@ -426,15 +435,15 @@ const App: React.FC = () => {
                         View Courses
                     </button>
                     {!calculationResults.clusterEligibility[cluster.id]?.isEligible && (
-                      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                        <p className="text-[9px] font-bold text-amber-700 dark:text-amber-300">
+                      <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg p-3">
+                        <p className="text-[9px] font-bold text-red-700 dark:text-red-300">
                           ⚠️ Missing subjects: {calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')}
                         </p>
                       </div>
                     )}
                   </div>
                   
-                  <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-green-500/5 rounded-full blur-3xl group-hover:bg-green-500/20 transition-all duration-500"></div>
+                  <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-red-500/5 rounded-full blur-3xl group-hover:bg-red-500/20 transition-all duration-500"></div>
                 </div>
               ))}
             </div>
@@ -454,7 +463,7 @@ const App: React.FC = () => {
                   setSummaryData(summary);
                   setShowSummary(true);
                 }}
-                className="px-8 py-4 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-black uppercase tracking-wider rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-95 text-sm"
+                className="px-8 py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-black uppercase tracking-wider rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-95 text-sm"
               >
                 📋 View General Summary - All Eligible Courses
               </button>
@@ -463,12 +472,12 @@ const App: React.FC = () => {
             {/* GENERAL SUMMARY MODAL */}
             {showSummary && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white dark:bg-slate-800 rounded-[2rem] max-w-4xl w-full max-h-[80vh] overflow-y-auto shadow-2xl">
-                  <div className="sticky top-0 bg-green-600 p-6 flex justify-between items-center">
+                <div className="bg-white dark:bg-slate-800 rounded-[2rem] max-w-4xl w-full max-h-[80vh] overflow-y-auto shadow-2xl\">
+                  <div className="sticky top-0 bg-gradient-to-r from-red-600 to-red-700 p-6 flex justify-between items-center\">
                     <h2 className="text-2xl font-black text-white uppercase tracking-tight">📋 General Summary - Your Eligible Courses</h2>
                     <button
                       onClick={() => setShowSummary(false)}
-                      className="text-white hover:bg-green-700 p-2 rounded-lg transition-all"
+                      className="text-white hover:bg-red-700 p-2 rounded-lg transition-all"
                     >
                       <i className="fas fa-times text-xl"></i>
                     </button>
@@ -481,14 +490,14 @@ const App: React.FC = () => {
                       </div>
                     ) : (
                       <>
-                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                          <p className="text-sm font-bold text-blue-700 dark:text-blue-300">
+                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                          <p className="text-sm font-bold text-red-700 dark:text-red-300">
                             ✅ You are eligible for <span className="font-black">{summaryData.length}</span> cluster{summaryData.length !== 1 ? 's' : ''} with <span className="font-black">{summaryData.reduce((sum: number, s: any) => sum + (Array.isArray(s.courses) ? s.courses.length : 0), 0)}</span> total courses
                           </p>
                         </div>
 
                         {summaryData.map((cluster) => (
-                          <div key={cluster.clusterId} className="border-l-4 border-green-500 pl-6 py-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
+                          <div key={cluster.clusterId} className="border-l-4 border-red-500 pl-6 py-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg\">
                             <div className="flex items-start justify-between mb-3">
                               <div>
                                 <h3 className="font-black text-lg text-slate-900 dark:text-white">
@@ -527,9 +536,9 @@ const App: React.FC = () => {
                           </div>
                         ))}
 
-                        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mt-8">
-                          <h4 className="font-black text-green-900 dark:text-green-100 mb-2">📌 Recommendation</h4>
-                          <p className="text-sm text-green-800 dark:text-green-200">
+                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mt-8">
+                          <h4 className="font-black text-red-900 dark:text-red-100 mb-2">📌 Recommendation</h4>
+                          <p className="text-sm text-red-800 dark:text-red-200">
                             You have secured access to all eligible courses above. Select your top choice based on your career interests and the competitiveness of the programme. Universities will rank candidates based on cluster points and subject performance.
                           </p>
                         </div>
@@ -543,9 +552,9 @@ const App: React.FC = () => {
             {/* CAREER GUIDANCE AND PRO TIPS SECTION */}
             <div className="mt-20 space-y-10">
               <div className="flex flex-col items-center text-center space-y-2">
-                <h3 className="text-xs font-black uppercase text-green-600 tracking-[0.4em]">Student Resource Center</h3>
+                <h3 className="text-xs font-black uppercase text-red-600 tracking-[0.4em]">Student Resource Center</h3>
                 <h2 className="text-3xl font-black uppercase tracking-tight text-slate-800 dark:text-white">Pro Tips & Career Guidance</h2>
-                <div className="h-1 w-20 bg-green-600 rounded-full"></div>
+                <div className="h-1 w-20 bg-red-600 rounded-full"></div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -580,11 +589,11 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-slate-900 dark:bg-green-600/10 p-10 rounded-[3rem] border border-slate-800 dark:border-green-500/20 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+              <div className="bg-slate-900 dark:bg-red-600/10 p-10 rounded-[3rem] border border-slate-800 dark:border-red-500/20 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
                 <div className="space-y-4">
-                  <div className="inline-flex items-center gap-2 bg-green-500/20 px-3 py-1 rounded-full border border-green-500/30">
-                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                    <span className="text-[10px] font-black text-green-400 uppercase tracking-widest">2025 Placement Cycle</span>
+                  <div className="inline-flex items-center gap-2 bg-red-500/20 px-3 py-1 rounded-full border border-red-500/30">
+                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                    <span className="text-[10px] font-black text-red-400 uppercase tracking-widest">2025 Placement Cycle</span>
                   </div>
                   <h3 className="text-2xl font-black text-white uppercase tracking-tight">Need to try a different scenario?</h3>
                   <p className="text-slate-400 text-sm max-w-md font-medium">
@@ -593,7 +602,7 @@ const App: React.FC = () => {
                 </div>
                 <button 
                   onClick={resetForNew} 
-                  className="bg-white text-slate-900 px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:bg-green-500 hover:text-white transition-all shadow-2xl active:scale-95 whitespace-nowrap"
+                  className="bg-white text-slate-900 px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:bg-red-600 hover:text-white transition-all shadow-2xl active:scale-95 whitespace-nowrap"
                 >
                   New Calculation
                 </button>
@@ -653,7 +662,7 @@ const App: React.FC = () => {
             ) : (
               <div className="space-y-6 overflow-y-auto pr-2">
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-8 rounded-3xl border-2 border-green-500/30 text-center shadow-lg shadow-green-600/10">
-                  <h3 className="text-xs font-black uppercase text-green-600 tracking-[0.2em] mb-4 flex items-center justify-center gap-2">
+                  <h3 className="text-xs font-black uppercase text-red-600 tracking-[0.2em] mb-4 flex items-center justify-center gap-2">
                     <i className="fas fa-key"></i> Active Passkey
                   </h3>
                   <div className="relative group">
@@ -663,11 +672,11 @@ const App: React.FC = () => {
                   </div>
                   <button 
                     onClick={generateNextAdminKey}
-                    className="w-full bg-green-600 text-white font-black py-4 rounded-2xl uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white font-black py-4 rounded-2xl uppercase tracking-widest hover:from-red-700 hover:to-red-800 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
                   >
                     <i className="fas fa-plus-circle"></i> Generate Next Passkey
                   </button>
-                  <p className="text-[9px] font-bold text-slate-400 mt-4 uppercase tracking-wider">Hand this code to the user for one-time access</p>
+                  <p className="text-[9px] font-bold text-slate-400 mt-4 uppercase tracking-wider\">Hand this code to the user for one-time access</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -721,7 +730,7 @@ const App: React.FC = () => {
                         <div className="flex-1 bg-white dark:bg-slate-900 border-2 border-purple-200 dark:border-purple-800 rounded-xl p-4 font-mono font-black text-lg text-purple-600 dark:text-purple-300 text-center tracking-widest">
                           {currentRequiredPasskey}
                         </div>
-                        <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center text-green-600 text-xl">
+                        <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center text-red-600 text-xl">
                           <i className="fas fa-check-circle"></i>
                         </div>
                       </div>
@@ -852,23 +861,23 @@ const App: React.FC = () => {
                   )}
 
                   {/* Your Performance Section */}
-                  <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 rounded-lg p-6">
-                    <h3 className="font-black text-lg text-green-900 dark:text-green-100 mb-4 flex items-center gap-2">
+                  <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-lg p-6">
+                    <h3 className="font-black text-lg text-red-900 dark:text-red-100 mb-4 flex items-center gap-2">
                       <i className="fas fa-chart-line"></i>
                       YOUR PLACEMENT SCORE FOR THIS CLUSTER
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="bg-white dark:bg-slate-700/50 p-4 rounded-lg text-center">
                         <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Cluster Points</p>
-                        <p className={`text-3xl font-black ${calculationResults.clusterWeights[activeCluster.id] === 0 ? 'text-gray-500' : 'text-green-600'}`}>
+                        <p className={`text-3xl font-black ${calculationResults.clusterWeights[activeCluster.id] === 0 ? 'text-gray-500' : 'text-red-600'}`}>
                           {String(calculationResults.clusterWeights[activeCluster.id]).padStart(2, '0')}
                         </p>
                       </div>
                       <div className="bg-white dark:bg-slate-700/50 p-4 rounded-lg text-center">
-                        <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Total KCSE Points</p>
-                        <p className="text-3xl font-black text-blue-600">{calculationResults.totalPoints}</p>
+                        <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-2\">Total KCSE Points</p>
+                        <p className="text-3xl font-black text-blue-600\">{calculationResults.totalPoints}</p>
                       </div>
-                      <div className="bg-white dark:bg-slate-700/50 p-4 rounded-lg text-center">
+                      <div className="bg-white dark:bg-slate-700/50 p-4 rounded-lg text-center\">
                         <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Mean Grade</p>
                         <p className="text-3xl font-black text-purple-600">{calculationResults.meanGrade}</p>
                       </div>
@@ -929,7 +938,7 @@ const App: React.FC = () => {
               <button onClick={() => setShowCourseModal(false)} className="bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600 text-slate-900 dark:text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
                 Close
               </button>
-              <button onClick={() => setShowCourseModal(false)} className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-green-600/20 transition-all">
+              <button onClick={() => setShowCourseModal(false)} className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-600/20 transition-all">
                 <i className="fas fa-check mr-2"></i>
                 Confirm Selection
               </button>
