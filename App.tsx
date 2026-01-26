@@ -14,7 +14,6 @@ const App: React.FC = () => {
   const [transactionCode, setTransactionCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [usedCodes, setUsedCodes] = useState<string[]>([]);
   const [showSuccessTick, setShowSuccessTick] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   
@@ -22,7 +21,7 @@ const App: React.FC = () => {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [adminAuth, setAdminAuth] = useState({ user: '', pass: '', loggedIn: false });
   const [stats, setStats] = useState({ totalCalculations: 0 });
-  const [currentRequiredPasskey, setCurrentRequiredPasskey] = useState('2007');
+  const currentRequiredPasskey = '2007';
 
   // Modal states for AI
   const [showCourseModal, setShowCourseModal] = useState(false);
@@ -31,29 +30,8 @@ const App: React.FC = () => {
   const [isGeneratingCourses, setIsGeneratingCourses] = useState(false);
 
   useEffect(() => {
-    const savedCodes = localStorage.getItem('burned_codes');
     const savedStats = localStorage.getItem('app_stats');
-    const savedPasskey = localStorage.getItem('current_passkey');
-    
-    if (savedCodes) setUsedCodes(JSON.parse(savedCodes));
     if (savedStats) setStats(JSON.parse(savedStats));
-    if (savedPasskey) setCurrentRequiredPasskey(savedPasskey);
-
-    // Real-time sync across tabs/windows: Listen for storage changes
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'current_passkey' && e.newValue) {
-        setCurrentRequiredPasskey(e.newValue);
-      }
-      if (e.key === 'burned_codes' && e.newValue) {
-        setUsedCodes(JSON.parse(e.newValue));
-      }
-      if (e.key === 'app_stats' && e.newValue) {
-        setStats(JSON.parse(e.newValue));
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const updateStats = () => {
@@ -94,33 +72,12 @@ const App: React.FC = () => {
   const verifyAccess = () => {
     const inputCode = transactionCode.trim();
     setAuthError(null);
-    
-    // Check against ALL expired codes (works across devices since they're in localStorage)
-    const currentUsedCodes = JSON.parse(localStorage.getItem('burned_codes') || '[]');
-    if (currentUsedCodes.includes(inputCode)) {
-      setAuthError("❌ PASSKEY ALREADY USED - This code has been activated on another device. Please contact your administrator for a new passkey.");
-      setTransactionCode('');
-      return;
-    }
-
-    // Check against the CURRENT active passkey
-    const currentActivePasskey = localStorage.getItem('current_passkey');
     setIsProcessing(true);
 
     setTimeout(() => {
-      const isPasskeyMatch = inputCode === currentActivePasskey;
+      const isPasskeyMatch = inputCode === currentRequiredPasskey;
 
       if (isPasskeyMatch) {
-        // Immediately mark as used
-        const newBurned = [...currentUsedCodes, inputCode];
-        localStorage.setItem('burned_codes', JSON.stringify(newBurned));
-        setUsedCodes(newBurned);
-        
-        // Generate and store next passkey
-        const nextKey = (parseInt(currentActivePasskey || '2025') + 1).toString();
-        localStorage.setItem('current_passkey', nextKey);
-        setCurrentRequiredPasskey(nextKey);
-
         updateStats();
         setIsProcessing(false);
         setShowSuccessTick(true);
@@ -131,30 +88,13 @@ const App: React.FC = () => {
       } else {
         setIsProcessing(false);
         setTransactionCode('');
-        setAuthError("❌ ACCESS DENIED: Invalid or expired passkey. Please request a new one from your administrator.");
+        setAuthError("❌ ACCESS DENIED: Invalid passkey.");
         setTimeout(() => setAuthError(null), 3000);
       }
     }, 800);
   };
 
-  const generateNextAdminKey = () => {
-    // Get current values from localStorage (source of truth for cross-device sync)
-    const currentPasskey = localStorage.getItem('current_passkey') || '2025';
-    const currentBurned = JSON.parse(localStorage.getItem('burned_codes') || '[]');
-    
-    // Mark current passkey as used
-    if (!currentBurned.includes(currentPasskey)) {
-      currentBurned.push(currentPasskey);
-      localStorage.setItem('burned_codes', JSON.stringify(currentBurned));
-      setUsedCodes(currentBurned);
-    }
-    
-    // Generate next key
-    const nextKey = (parseInt(currentPasskey) + 1).toString();
-    localStorage.setItem('current_passkey', nextKey);
-    setCurrentRequiredPasskey(nextKey);
-    alert(`✅ New passkey generated successfully!\n\nNew Active Passkey: ${nextKey}\n\nAll devices will be updated automatically. Old passkey (${currentPasskey}) is now expired worldwide.`);
-  };
+
 
   const resetForNew = () => {
     setSelectedGrades({});
@@ -168,16 +108,6 @@ const App: React.FC = () => {
       setAdminAuth(prev => ({ ...prev, loggedIn: true }));
     } else {
       alert("Invalid Admin Credentials");
-    }
-  };
-
-  const resetPasskeySequence = () => {
-    if (confirm("⚠️ Reset passkey sequence back to 2025? This will clear all usage history and affect ALL devices.\n\nAre you sure?")) {
-      setUsedCodes([]);
-      setCurrentRequiredPasskey('2025');
-      localStorage.setItem('burned_codes', JSON.stringify([]));
-      localStorage.setItem('current_passkey', '2025');
-      alert("✅ Passkey sequence reset. All devices will update automatically.");
     }
   };
 
@@ -291,26 +221,26 @@ Guidelines:
   }
 
   return (
-    <div className={`${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-gradient-to-br from-slate-900 via-emerald-900 to-black text-white'} min-h-screen pb-12 transition-colors flex flex-col relative`}
+    <div className={`${isDarkMode ? 'dark bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 text-slate-800'} min-h-screen pb-12 transition-colors flex flex-col relative`}
     style={{
-      backgroundImage: !isDarkMode ? `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 40 0 L 0 0 0 40' fill='none' stroke='rgba(16,185,129,0.12)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23grid)'/%3E%3C/svg%3E")` : undefined,
+      backgroundImage: !isDarkMode ? `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 40 0 L 0 0 0 40' fill='none' stroke='rgba(99,102,241,0.08)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23grid)'/%3E%3C/svg%3E")` : undefined,
       backgroundAttachment: 'fixed'
     }}>
-      {/* Professional green and black gradient decorative blobs */}
+      {/* Professional blue decorative elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-10 left-10 w-80 h-80 bg-emerald-500 dark:bg-emerald-900/30 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute top-40 right-10 w-80 h-80 bg-green-400 dark:bg-green-900/30 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute -bottom-8 left-20 w-80 h-80 bg-teal-500 dark:bg-teal-900/30 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-10 left-10 w-80 h-80 bg-blue-500/20 dark:bg-blue-900/30 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+        <div className="absolute top-40 right-10 w-80 h-80 bg-indigo-400/20 dark:bg-indigo-900/30 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute -bottom-8 left-20 w-80 h-80 bg-purple-500/20 dark:bg-purple-900/30 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style={{animationDelay: '4s'}}></div>
       </div>
-      {/* Professional green and black gradient banner */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500"></div>
-      <nav className="sticky top-0 z-50 bg-gradient-to-r from-slate-900 to-black dark:from-slate-950 dark:to-black p-4 shadow-lg flex justify-between items-center border-b-2 border-emerald-600 dark:border-green-700">
+      {/* Professional gradient banner */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+      <nav className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-4 shadow-lg flex justify-between items-center border-b border-blue-200 dark:border-blue-800">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white p-2.5 rounded-xl shadow-lg"><i className="fas fa-graduation-cap font-bold text-lg"></i></div>
-          <h1 className="text-2xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400">KUCCPS<span className="text-green-500 font-black">PRO</span></h1>
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-2.5 rounded-xl shadow-lg"><i className="fas fa-graduation-cap font-bold text-lg"></i></div>
+          <h1 className="text-2xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">KUCCPS<span className="text-indigo-600 font-black">PRO</span></h1>
         </div>
-        <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center transition-transform active:scale-90">
-          <i className={`fas ${isDarkMode ? 'fa-sun text-yellow-400' : 'fa-moon text-slate-600'}`}></i>
+        <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 w-10 h-10 rounded-full bg-blue-50 dark:bg-slate-700 flex items-center justify-center transition-transform active:scale-90 hover:bg-blue-100 dark:hover:bg-slate-600">
+          <i className={`fas ${isDarkMode ? 'fa-sun text-yellow-400' : 'fa-moon text-blue-600'}`}></i>
         </button>
       </nav>
 
@@ -324,14 +254,14 @@ Guidelines:
           }}>
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/15 via-transparent to-slate-900/15 rounded-[2.5rem] pointer-events-none"></div>
             <div className="absolute inset-0 backdrop-blur-sm rounded-[2.5rem] pointer-events-none"></div>
-            <div className="relative z-20 bg-slate-800/90 dark:bg-slate-900/90 dark:backdrop-blur-md rounded-[2.5rem] p-8 shadow-2xl border border-emerald-600/30 dark:border-green-700/30 space-y-8\">
-              <h2 className="text-4xl font-black uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400">📝 Grade Entry Portal</h2>
+            <div className="relative z-20 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-[2.5rem] p-8 shadow-2xl border border-blue-200/50 dark:border-blue-700/30 space-y-8">
+              <h2 className="text-4xl font-black uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">📝 Grade Entry Portal</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {SUBJECTS.map(subj => (
                   <div key={subj.id}>
                     <label className="text-[10px] font-black uppercase text-blue-700 dark:text-blue-300 block mb-2">{subj.name}</label>
                     <select
-                      className="w-full bg-white dark:bg-indigo-950 border-2 border-transparent focus:border-blue-500 dark:focus:border-indigo-400 rounded-xl p-3 font-bold transition-all outline-none text-slate-900 dark:text-white shadow-md hover:shadow-lg"
+                      className="w-full bg-white dark:bg-slate-800 border-2 border-blue-200 focus:border-blue-500 dark:border-slate-600 dark:focus:border-blue-400 rounded-xl p-3 font-bold transition-all outline-none text-slate-900 dark:text-white shadow-sm hover:shadow-md"
                       value={selectedGrades[subj.id] || ''}
                       onChange={(e) => handleGradeChange(subj.id, e.target.value as Grade)}
                     >
@@ -344,7 +274,7 @@ Guidelines:
               <button
                 onClick={() => setStep(AppStep.Payment)}
                 disabled={Object.keys(selectedGrades).length < 7}
-                className="w-full bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 text-white font-black py-4 rounded-xl shadow-lg transition-all disabled:opacity-50 uppercase tracking-widest active:scale-[0.98] shadow-green-500/30"
+                className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-black py-4 rounded-xl shadow-lg transition-all disabled:opacity-50 uppercase tracking-widest active:scale-[0.98] shadow-blue-500/30"
               >
                 Next: Verify Access
               </button>
@@ -353,9 +283,9 @@ Guidelines:
         )}
 
         {step === AppStep.Payment && (
-          <div className="bg-gradient-to-br from-white to-blue-50 dark:from-indigo-900/30 dark:to-slate-900 rounded-[2.5rem] p-8 shadow-xl border-2 border-blue-200 dark:border-indigo-700 space-y-10 animate-in slide-in-from-bottom-4 text-center overflow-hidden">
+          <div className="bg-gradient-to-br from-white to-blue-50 dark:from-slate-800/90 dark:to-slate-900/90 backdrop-blur-md rounded-[2.5rem] p-8 shadow-xl border border-blue-200 dark:border-blue-700/50 space-y-10 animate-in slide-in-from-bottom-4 text-center overflow-hidden">
             <div className="space-y-4">
-              <h2 className="text-3xl font-black uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400">🔐 Access Verification</h2>
+              <h2 className="text-3xl font-black uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">🔐 Access Verification</h2>
               
               {authError ? (
                 <div className="bg-orange-100 dark:bg-orange-900/40 p-6 rounded-2xl border-2 border-orange-500 animate-bounce shadow-lg">
@@ -373,11 +303,11 @@ Guidelines:
 
             <div className="space-y-6">
               <div className="space-y-2 text-left">
-                <label className="text-[10px] font-black uppercase text-green-400 dark:text-emerald-300 tracking-widest block ml-1">Current Passkey</label>
+                <label className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-300 tracking-widest block ml-1">Current Passkey</label>
                 <input
                   type="text"
                   placeholder="Enter Passkey"
-                  className={`w-full bg-slate-800 dark:bg-slate-900 rounded-2xl p-6 font-black outline-none border-2 transition-all uppercase tracking-[0.5em] text-white text-center text-4xl shadow-inner ${authError ? 'border-orange-600 ring-4 ring-orange-500/20' : 'border-emerald-600 dark:border-green-700 focus:border-emerald-500 dark:focus:border-green-400'}`}
+                  className={`w-full bg-white dark:bg-slate-800 rounded-2xl p-6 font-black outline-none border-2 transition-all uppercase tracking-[0.5em] text-slate-800 dark:text-white text-center text-4xl shadow-inner ${authError ? 'border-red-400 ring-4 ring-red-500/20' : 'border-blue-300 dark:border-blue-600 focus:border-blue-500 dark:focus:border-blue-400'}`}
                   value={transactionCode}
                   onChange={e => {
                     setTransactionCode(e.target.value);
@@ -388,7 +318,7 @@ Guidelines:
               <button
                 onClick={verifyAccess}
                 disabled={isProcessing || !transactionCode}
-                className={`w-full text-white font-black py-5 rounded-2xl shadow-xl transition-all uppercase tracking-widest text-lg active:scale-[0.98] bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 disabled:opacity-50 shadow-green-500/30`}
+                className={`w-full text-white font-black py-5 rounded-2xl shadow-xl transition-all uppercase tracking-widest text-lg active:scale-[0.98] bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 disabled:opacity-50 shadow-blue-500/30`}
               >
                 {isProcessing ? (
                     <div className="flex items-center justify-center gap-3">
@@ -405,31 +335,31 @@ Guidelines:
 
         {step === AppStep.Results && (
           <div className="space-y-8 animate-in zoom-in-95">
-            <div className="bg-gradient-to-r from-slate-900 to-black dark:from-slate-950 dark:to-black rounded-[2.5rem] p-10 shadow-xl border-t-[12px] border-emerald-500 flex flex-col md:flex-row justify-between items-center">
+            <div className="bg-gradient-to-r from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 rounded-[2.5rem] p-10 shadow-xl border-t-[12px] border-blue-500 flex flex-col md:flex-row justify-between items-center">
               <div>
-                <p className="text-[10px] font-black text-emerald-400 dark:text-green-300 uppercase tracking-widest">Mean Grade</p>
-                <h2 className="text-8xl font-black text-emerald-500 dark:text-green-400 tracking-tighter">{calculationResults.meanGrade}</h2>
+                <p className="text-[10px] font-black text-blue-600 dark:text-blue-300 uppercase tracking-widest">Mean Grade</p>
+                <h2 className="text-8xl font-black text-blue-600 dark:text-blue-400 tracking-tighter">{calculationResults.meanGrade}</h2>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-black text-green-400 dark:text-teal-300 uppercase tracking-widest">Total Points</p>
-                <h2 className="text-8xl font-black text-green-500 dark:text-teal-400 tracking-tighter">{calculationResults.totalPoints}</h2>
+                <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-300 uppercase tracking-widest">Total Points</p>
+                <h2 className="text-8xl font-black text-indigo-600 dark:text-indigo-400 tracking-tighter">{calculationResults.totalPoints}</h2>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {CLUSTERS.map(cluster => (
-                <div key={cluster.id} className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-700 hover:border-green-500 shadow-xl flex flex-col justify-between items-stretch transition-all group relative overflow-hidden">
+                <div key={cluster.id} className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-blue-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-600 shadow-lg hover:shadow-xl flex flex-col justify-between items-stretch transition-all group relative overflow-hidden">
                   <div className="mb-6">
                     <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         <h3 className="font-black text-[10px] uppercase text-slate-400 tracking-widest">{cluster.name}</h3>
                     </div>
                     
                     <div className="flex items-end gap-2">
-                        <p className="text-6xl font-black text-emerald-500 dark:text-green-400 tracking-tighter leading-none">
+                        <p className="text-6xl font-black text-blue-600 dark:text-blue-400 tracking-tighter leading-none">
                             {calculationResults.clusterWeights[cluster.id].toFixed(3)}
                         </p>
-                        <span className="text-[10px] font-black text-green-500 dark:text-teal-400 uppercase mb-2">Weight</span>
+                        <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase mb-2">Weight</span>
                     </div>
                   </div>
                   
@@ -439,7 +369,7 @@ Guidelines:
                         disabled={!calculationResults.clusterEligibility[cluster.id]?.isEligible}
                         className={`w-full text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-md transition-all active:scale-[0.97] flex items-center justify-center gap-3 border-2 border-transparent ${
                           calculationResults.clusterEligibility[cluster.id]?.isEligible 
-                            ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white dark:hover:border-white/10 cursor-pointer' 
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white dark:hover:border-white/10 cursor-pointer' 
                             : 'bg-slate-400 dark:bg-slate-600 cursor-not-allowed opacity-60'
                         }`}
                         title={
@@ -460,7 +390,7 @@ Guidelines:
                     )}
                   </div>
                   
-                  <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all duration-500\"></div>
+                  <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-500"></div>
                 </div>
               ))}
             </div>
@@ -468,9 +398,9 @@ Guidelines:
             {/* CAREER GUIDANCE AND PRO TIPS SECTION */}
             <div className="mt-20 space-y-10">
               <div className="flex flex-col items-center text-center space-y-2">
-                <h3 className="text-xs font-black uppercase text-emerald-400 dark:text-green-400 tracking-[0.4em]\">Student Resource Center</h3>
+                <h3 className="text-xs font-black uppercase text-blue-600 dark:text-blue-400 tracking-[0.4em]">Student Resource Center</h3>
                 <h2 className="text-3xl font-black uppercase tracking-tight text-slate-800 dark:text-white">Pro Tips & Career Guidance</h2>
-                <div className="h-1 w-20 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full\"></div>
+                <div className="h-1 w-20 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"></div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -505,20 +435,20 @@ Guidelines:
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-slate-900 to-slate-800 dark:from-indigo-900/20 dark:to-slate-900 p-10 rounded-[3rem] border border-slate-700 dark:border-indigo-500/20 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left\">
-                <div className="space-y-4\">
-                  <div className="inline-flex items-center gap-2 bg-indigo-500/20 px-3 py-1 rounded-full border border-indigo-500/30\">
-                    <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse\"></span>
-                    <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest\">2025 Placement Cycle</span>
+              <div className="bg-gradient-to-r from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 p-10 rounded-[3rem] border border-blue-200 dark:border-blue-700/50 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+                <div className="space-y-4">
+                  <div className="inline-flex items-center gap-2 bg-blue-500/20 px-3 py-1 rounded-full border border-blue-500/30">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                    <span className="text-[10px] font-black text-blue-600 dark:text-blue-300 uppercase tracking-widest">2025 Placement Cycle</span>
                   </div>
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tight">Need to try a different scenario?</h3>
-                  <p className="text-slate-400 text-sm max-w-md font-medium">
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Need to try a different scenario?</h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm max-w-md font-medium">
                     You can recalculate as many times as you need within this session. Experiment with different subject combinations to see how your cluster weights change.
                   </p>
                 </div>
                 <button 
                   onClick={resetForNew} 
-                  className="bg-white text-slate-900 px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:bg-emerald-600 hover:text-white transition-all shadow-2xl active:scale-95 whitespace-nowrap\"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg active:scale-95 whitespace-nowrap"
                 >
                   New Calculation
                 </button>
@@ -528,10 +458,10 @@ Guidelines:
         )}
       </main>
 
-      <footer className="mt-auto py-12 text-center border-t border-slate-100 dark:border-slate-800">
+      <footer className="mt-auto py-12 text-center border-t border-blue-200 dark:border-slate-800">
         <button 
           onClick={() => setIsAdminOpen(true)}
-          className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest hover:text-green-500 transition-colors"
+          className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
         >
           System Administration • Official KUCCPS 2025 Algorithm
         </button>
@@ -587,52 +517,17 @@ Guidelines:
                     </p>
                   </div>
                   <button 
-                    onClick={generateNextAdminKey}
+                    onClick={() => alert(`✅ Passkey is constant: 2007\n\nThis passkey never expires and can be used multiple times.`)}
                     className="w-full bg-green-600 text-white font-black py-4 rounded-2xl uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
                   >
-                    <i className="fas fa-plus-circle"></i> Generate Next Passkey
+                    <i className="fas fa-info-circle"></i> View Passkey Info
                   </button>
                   <p className="text-[9px] font-bold text-slate-400 mt-4 uppercase tracking-wider">Hand this code to the user for one-time access</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
-                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Calculations</p>
-                    <p className="text-4xl font-black text-slate-800 dark:text-white">{stats.totalCalculations || 0}</p>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
-                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Archived Keys</p>
-                    <p className="text-4xl font-black text-slate-700 dark:text-slate-300">{usedCodes.length}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center ml-1">
-                    <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Used Key Archive</h3>
-                    <span className="text-[8px] font-bold text-orange-500 uppercase">Burned / Expired</span>
-                  </div>
-                  <div className="max-h-40 overflow-y-auto bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-slate-700">
-                    {usedCodes.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-2">
-                        {usedCodes.map((code, idx) => (
-                          <span key={idx} className="text-[10px] font-black font-mono bg-slate-200 dark:bg-slate-800 p-2 rounded text-center border dark:border-slate-700 text-slate-500 line-through decoration-slate-500/50">
-                            {code}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-[10px] text-slate-400 text-center py-4 font-bold">No history yet.</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-3 pt-6 border-t dark:border-slate-700">
-                  <button 
-                    onClick={resetPasskeySequence}
-                    className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-black py-4 rounded-xl uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-500 transition-all"
-                  >
-                    Reset Sequence to 2025
-                  </button>
+                <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
+                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Total Calculations</p>
+                  <p className="text-4xl font-black text-slate-800 dark:text-white">{stats.totalCalculations || 0}</p>
                 </div>
               </div>
             )}
