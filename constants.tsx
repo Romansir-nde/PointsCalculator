@@ -23,6 +23,7 @@ export const SUBJECTS: Subject[] = [
   { id: 'art', name: 'Art and Design', category: 'technical' },
   { id: 'fre', name: 'French', category: 'languages' },
   { id: 'ger', name: 'German', category: 'languages' },
+  { id: 'ara', name: 'Arabic', category: 'languages' },
   { id: 'mus', name: 'Music', category: 'languages' },
 ];
 
