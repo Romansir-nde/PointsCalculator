@@ -322,9 +322,9 @@ Guidelines:
             backgroundPosition: 'center',
             backgroundAttachment: 'fixed'
           }}>
-            <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 via-white/30 to-rose-300/20 rounded-[2.5rem] pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/15 via-transparent to-slate-900/15 rounded-[2.5rem] pointer-events-none"></div>
             <div className="absolute inset-0 backdrop-blur-sm rounded-[2.5rem] pointer-events-none"></div>
-            <div className="relative z-20 bg-white/95 dark:bg-red-900/70 dark:backdrop-blur-md rounded-[2.5rem] p-8 shadow-2xl border border-red-200/50 dark:border-red-600/50 space-y-8">
+            <div className="relative z-20 bg-slate-800/90 dark:bg-slate-900/90 dark:backdrop-blur-md rounded-[2.5rem] p-8 shadow-2xl border border-emerald-600/30 dark:border-green-700/30 space-y-8\">
               <h2 className="text-4xl font-black uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400">📝 Grade Entry Portal</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {SUBJECTS.map(subj => (
@@ -358,8 +358,8 @@ Guidelines:
               <h2 className="text-3xl font-black uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400">🔐 Access Verification</h2>
               
               {authError ? (
-                <div className="bg-red-100 dark:bg-red-900/40 p-6 rounded-2xl border-2 border-red-500 animate-bounce shadow-lg">
-                    <p className="font-black text-red-700 dark:text-red-300 text-sm tracking-widest uppercase flex items-center justify-center gap-2">
+                <div className="bg-orange-100 dark:bg-orange-900/40 p-6 rounded-2xl border-2 border-orange-500 animate-bounce shadow-lg">
+                    <p className="font-black text-orange-700 dark:text-orange-300 text-sm tracking-widest uppercase flex items-center justify-center gap-2">
                         <i className="fas fa-exclamation-triangle"></i>
                         {authError}
                     </p>
@@ -377,7 +377,7 @@ Guidelines:
                 <input
                   type="text"
                   placeholder="Enter Passkey"
-                  className={`w-full bg-slate-800 dark:bg-slate-900 rounded-2xl p-6 font-black outline-none border-2 transition-all uppercase tracking-[0.5em] text-white text-center text-4xl shadow-inner ${authError ? 'border-red-600 ring-4 ring-red-500/20' : 'border-emerald-600 dark:border-green-700 focus:border-emerald-500 dark:focus:border-green-400'}`}
+                  className={`w-full bg-slate-800 dark:bg-slate-900 rounded-2xl p-6 font-black outline-none border-2 transition-all uppercase tracking-[0.5em] text-white text-center text-4xl shadow-inner ${authError ? 'border-orange-600 ring-4 ring-orange-500/20' : 'border-emerald-600 dark:border-green-700 focus:border-emerald-500 dark:focus:border-green-400'}`}
                   value={transactionCode}
                   onChange={e => {
                     setTransactionCode(e.target.value);
@@ -452,8 +452,8 @@ Guidelines:
                         {calculationResults.clusterEligibility[cluster.id]?.isEligible ? 'View My Courses' : 'Locked'}
                     </button>
                     {!calculationResults.clusterEligibility[cluster.id]?.isEligible && (
-                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                        <p className="text-[9px] font-bold text-red-700 dark:text-red-300">
+                      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-800 rounded-lg p-3">
+                        <p className="text-[9px] font-bold text-amber-700 dark:text-amber-300">
                           🔒 Missing: {calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')}
                         </p>
                       </div>
@@ -543,10 +543,10 @@ Guidelines:
           <div className="bg-white dark:bg-slate-800 w-full max-w-2xl rounded-[2rem] p-8 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="flex justify-between items-center mb-8 border-b dark:border-slate-700 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center"><i className="fas fa-user-shield"></i></div>
+                <div className="w-10 h-10 bg-emerald-100/20 text-emerald-500 rounded-xl flex items-center justify-center"><i className="fas fa-user-shield"></i></div>
                 <h2 className="text-xl font-black uppercase tracking-widest text-slate-800 dark:text-white">Admin Control</h2>
               </div>
-              <button onClick={() => setIsAdminOpen(false)} className="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors">
+              <button onClick={() => setIsAdminOpen(false)} className="w-10 h-10 rounded-full hover:bg-slate-700 dark:hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-emerald-500 transition-colors">
                 <i className="fas fa-times"></i>
               </button>
             </div>
@@ -558,7 +558,7 @@ Guidelines:
                   <input 
                     type="text" 
                     placeholder="ADMIN" 
-                    className="w-full bg-slate-50 dark:bg-slate-900 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-red-500 text-slate-900 dark:text-white"
+                    className="w-full bg-slate-50 dark:bg-slate-900 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-emerald-500 text-slate-900 dark:text-white"
                     value={adminAuth.user}
                     onChange={e => setAdminAuth(prev => ({...prev, user: e.target.value}))}
                   />
@@ -568,7 +568,7 @@ Guidelines:
                   <input 
                     type="password" 
                     placeholder="••••" 
-                    className="w-full bg-slate-50 dark:bg-slate-900 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-red-500 text-slate-900 dark:text-white"
+                    className="w-full bg-slate-50 dark:bg-slate-900 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-emerald-500 text-slate-900 dark:text-white"
                     value={adminAuth.pass}
                     onChange={e => setAdminAuth(prev => ({...prev, pass: e.target.value}))}
                   />
@@ -602,20 +602,20 @@ Guidelines:
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
                     <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Archived Keys</p>
-                    <p className="text-4xl font-black text-red-500">{usedCodes.length}</p>
+                    <p className="text-4xl font-black text-slate-700 dark:text-slate-300">{usedCodes.length}</p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center ml-1">
                     <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Used Key Archive</h3>
-                    <span className="text-[8px] font-bold text-red-400 uppercase">Burned / Expired</span>
+                    <span className="text-[8px] font-bold text-orange-500 uppercase">Burned / Expired</span>
                   </div>
                   <div className="max-h-40 overflow-y-auto bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-slate-700">
                     {usedCodes.length > 0 ? (
                       <div className="grid grid-cols-3 gap-2">
                         {usedCodes.map((code, idx) => (
-                          <span key={idx} className="text-[10px] font-black font-mono bg-slate-200 dark:bg-slate-800 p-2 rounded text-center border dark:border-slate-700 text-slate-500 line-through decoration-red-500/50">
+                          <span key={idx} className="text-[10px] font-black font-mono bg-slate-200 dark:bg-slate-800 p-2 rounded text-center border dark:border-slate-700 text-slate-500 line-through decoration-slate-500/50">
                             {code}
                           </span>
                         ))}
@@ -629,7 +629,7 @@ Guidelines:
                 <div className="grid grid-cols-1 gap-3 pt-6 border-t dark:border-slate-700">
                   <button 
                     onClick={resetPasskeySequence}
-                    className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-black py-4 rounded-xl uppercase tracking-widest hover:border-red-500 hover:text-red-500 transition-all"
+                    className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-black py-4 rounded-xl uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-500 transition-all"
                   >
                     Reset Sequence to 2025
                   </button>
