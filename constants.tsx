@@ -23,13 +23,14 @@ export const SUBJECTS: Subject[] = [
   { id: 'art', name: 'Art and Design', category: 'technical' },
   { id: 'fre', name: 'French', category: 'languages' },
   { id: 'ger', name: 'German', category: 'languages' },
+  { id: 'ara', name: 'Arabic', category: 'languages' },
   { id: 'mus', name: 'Music', category: 'languages' },
 ];
 
 export const CLUSTERS: ClusterRequirement[] = [
   { id: 1, name: 'Law & Related', subjects: [['eng'], ['his', 'geo', 'cre'], ['mat', 'bio', 'phy', 'che'], ['eng', 'kis', 'bus', 'his', 'geo', 'cre']] },
   { id: 2, name: 'Business & Related', subjects: [['mat'], ['eng', 'kis'], ['bio', 'phy', 'che', 'his', 'geo', 'cre'], ['bus', 'mat', 'eco']] },
-  { id: 3, name: 'Arts & Related', subjects: [['eng', 'kis'], ['mat', 'bio', 'phy', 'che'], ['his', 'geo', 'cre'], ['art', 'mus', 'fre', 'ger', 'eng', 'kis']] },
+  { id: 3, name: 'Arts & Related', subjects: [['eng', 'kis'], ['mat', 'bio', 'phy', 'che'], ['his', 'geo', 'cre'], ['art', 'mus', 'fre', 'ger', 'ara', 'eng', 'kis']] },
   { id: 4, name: 'GeoScience & Related', subjects: [['mat'], ['phy'], ['che'], ['geo']] },
   { id: 5, name: 'Special Education', subjects: [['eng', 'kis'], ['mat', 'bio', 'phy', 'che'], ['his', 'geo', 'cre'], ['bus', 'agr', 'comp']] },
   { id: 6, name: 'Kiswahili & Related', subjects: [['kis'], ['eng'], ['mat', 'bio', 'phy', 'che'], ['his', 'geo', 'cre']] },
