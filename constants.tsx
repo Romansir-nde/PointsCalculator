@@ -23,14 +23,13 @@ export const SUBJECTS: Subject[] = [
   { id: 'art', name: 'Art and Design', category: 'technical' },
   { id: 'fre', name: 'French', category: 'languages' },
   { id: 'ger', name: 'German', category: 'languages' },
-  { id: 'ara', name: 'Arabic', category: 'languages' },
   { id: 'mus', name: 'Music', category: 'languages' },
 ];
 
 export const CLUSTERS: ClusterRequirement[] = [
   { id: 1, name: 'Law & Related', subjects: [['eng'], ['his', 'geo', 'cre'], ['mat', 'bio', 'phy', 'che'], ['eng', 'kis', 'bus', 'his', 'geo', 'cre']] },
   { id: 2, name: 'Business & Related', subjects: [['mat'], ['eng', 'kis'], ['bio', 'phy', 'che', 'his', 'geo', 'cre'], ['bus', 'mat', 'eco']] },
-  { id: 3, name: 'Arts & Related', subjects: [['eng', 'kis'], ['mat', 'bio', 'phy', 'che'], ['his', 'geo', 'cre'], ['art', 'mus', 'fre', 'ger', 'ara', 'eng', 'kis']] },
+  { id: 3, name: 'Arts & Related', subjects: [['eng', 'kis'], ['mat', 'bio', 'phy', 'che'], ['his', 'geo', 'cre'], ['art', 'mus', 'fre', 'ger', 'eng', 'kis']] },
   { id: 4, name: 'GeoScience & Related', subjects: [['mat'], ['phy'], ['che'], ['geo']] },
   { id: 5, name: 'Special Education', subjects: [['eng', 'kis'], ['mat', 'bio', 'phy', 'che'], ['his', 'geo', 'cre'], ['bus', 'agr', 'comp']] },
   { id: 6, name: 'Kiswahili & Related', subjects: [['kis'], ['eng'], ['mat', 'bio', 'phy', 'che'], ['his', 'geo', 'cre']] },
@@ -46,6 +45,9 @@ export const CLUSTERS: ClusterRequirement[] = [
   { id: 16, name: 'History & Related', subjects: [['his'], ['eng', 'kis'], ['mat', 'bio', 'phy', 'che'], ['geo', 'cre', 'bus']] },
   { id: 17, name: 'Agriculture, Food Science & Env', subjects: [['bio'], ['che'], ['mat', 'phy', 'geo'], ['agr', 'bus', 'eng', 'kis']] },
   { id: 18, name: 'Geography & Natural Resources', subjects: [['geo'], ['mat'], ['bio', 'phy', 'che'], ['eng', 'kis', 'bus']] },
-  { id: 19, name: 'Education Science & Arts', subjects: [['mat', 'his', 'geo'], ['eng', 'kis'], ['bio', 'phy', 'che'], ['bus', 'cre', 'mat']] },
-  { id: 20, name: 'Religious Studies & Related', subjects: [['cre'], ['eng', 'kis'], ['mat', 'bio', 'phy', 'che'], ['his', 'geo']] },
+  { id: 19, name: 'French & Related', subjects: [['fre'], ['eng', 'kis'], ['mat', 'bio', 'phy', 'che'], ['his', 'geo', 'cre']] },
+  { id: 20, name: 'German & Related', subjects: [['ger'], ['eng', 'kis'], ['mat', 'bio', 'phy', 'che'], ['his', 'geo', 'cre']] },
+  { id: 21, name: 'Music & Related', subjects: [['mus'], ['eng', 'kis'], ['mat', 'bio', 'phy', 'che'], ['his', 'geo', 'cre']] },
+  { id: 22, name: 'Education Science & Arts', subjects: [['mat', 'his', 'geo'], ['eng', 'kis'], ['bio', 'phy', 'che'], ['bus', 'cre', 'mat']] },
+  { id: 23, name: 'Religious Studies & Related', subjects: [['cre'], ['eng', 'kis'], ['mat', 'bio', 'phy', 'che'], ['his', 'geo']] },
 ];

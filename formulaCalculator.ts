@@ -65,7 +65,6 @@ export const calculateWeightedClusterPoints = (
   let sumR = 0;
   const relevantSubjects: string[] = [];
   const subjectPoints: number[] = [];
-  let hasMissingCoreSubjects = false;
 
   // For each subject group in the cluster, take the highest scoring subject
   for (let i = 0; i < cluster.subjects.length; i++) {
@@ -83,13 +82,16 @@ export const calculateWeightedClusterPoints = (
         relevantSubjects.push(subjectWithMaxPoints);
       }
     } else {
-      // Mark as missing - STRICTER CHECK: ANY subject group with no score means ineligible
-      hasMissingCoreSubjects = true;
-      
-      // Get human-readable name from SUBJECTS for first subject in group
-      const subject = SUBJECTS.find(s => s.id === subjectGroup[0]);
-      if (subject) {
-        missingSubjectNames.push(`${subject.name} (or ${subjectGroup.length > 1 ? 'alternatives' : 'required'})`);
+      // Only mark as missing if this is a CORE subject (single-item array = mandatory)
+      if (subjectGroup.length === 1) {
+        const coreSubjectId = subjectGroup[0];
+        missingRequiredSubjects.push(coreSubjectId);
+        
+        // Get human-readable name from SUBJECTS
+        const subject = SUBJECTS.find(s => s.id === coreSubjectId);
+        if (subject) {
+          missingSubjectNames.push(subject.name);
+        }
       }
     }
   }
@@ -102,9 +104,8 @@ export const calculateWeightedClusterPoints = (
   let weightedClusterPoints = 0;
   let isEligible = true;
 
-  // Only ineligible if ANY subject group has no score or score is below threshold
-  if (hasMissingCoreSubjects || sumR === 0 || totalPoints === 0) {
-    // Set points to 00 but ALLOW VIEW ACCESS
+  // Only ineligible if CORE subjects are missing or score is below threshold
+  if (missingSubjectNames.length > 0 || sumR === 0 || totalPoints === 0) {
     isEligible = false;
     weightedClusterPoints = 0;
   } else {
@@ -154,6 +155,9 @@ export const calculateWeightedClusterPoints = (
       18: 38,  // Geography & Natural Resources
       19: 39,  // Education Science & Arts
       20: 36,  // Religious Studies & Related
+      21: 36,  // French & Related
+      22: 36,  // German & Related
+      23: 36,  // Music & Related
     };
     
     const maxPointsForCluster = realWorldCaps[clusterId] || 39;

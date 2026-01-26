@@ -23,17 +23,12 @@ const App: React.FC = () => {
   const [adminAuth, setAdminAuth] = useState({ user: '', pass: '', loggedIn: false });
   const [stats, setStats] = useState({ totalCalculations: 0 });
   const [currentRequiredPasskey, setCurrentRequiredPasskey] = useState('2007');
-  const [newPasskeyInput, setNewPasskeyInput] = useState('');
 
   // Modal states for AI
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [activeCluster, setActiveCluster] = useState<any>(null);
   const [generatedCourses, setGeneratedCourses] = useState<string>('');
   const [isGeneratingCourses, setIsGeneratingCourses] = useState(false);
-
-  // Summary view state
-  const [showSummary, setShowSummary] = useState(false);
-  const [summaryData, setSummaryData] = useState<Array<{clusterId: number; clusterName: string; courses: string[]; points: number}>>([]);
 
   useEffect(() => {
     const savedCodes = localStorage.getItem('burned_codes');
@@ -100,13 +95,32 @@ const App: React.FC = () => {
     const inputCode = transactionCode.trim();
     setAuthError(null);
     
-    // Constant passkey 2007 - always valid, no usage restrictions
+    // Check against ALL expired codes (works across devices since they're in localStorage)
+    const currentUsedCodes = JSON.parse(localStorage.getItem('burned_codes') || '[]');
+    if (currentUsedCodes.includes(inputCode)) {
+      setAuthError("❌ PASSKEY ALREADY USED - This code has been activated on another device. Please contact your administrator for a new passkey.");
+      setTransactionCode('');
+      return;
+    }
+
+    // Check against the CURRENT active passkey
+    const currentActivePasskey = localStorage.getItem('current_passkey');
     setIsProcessing(true);
 
     setTimeout(() => {
-      const isPasskeyMatch = inputCode === '2007';
+      const isPasskeyMatch = inputCode === currentActivePasskey;
 
       if (isPasskeyMatch) {
+        // Immediately mark as used
+        const newBurned = [...currentUsedCodes, inputCode];
+        localStorage.setItem('burned_codes', JSON.stringify(newBurned));
+        setUsedCodes(newBurned);
+        
+        // Generate and store next passkey
+        const nextKey = (parseInt(currentActivePasskey || '2025') + 1).toString();
+        localStorage.setItem('current_passkey', nextKey);
+        setCurrentRequiredPasskey(nextKey);
+
         updateStats();
         setIsProcessing(false);
         setShowSuccessTick(true);
@@ -114,19 +128,32 @@ const App: React.FC = () => {
           setShowSuccessTick(false);
           setStep(AppStep.Results);
         }, 1200);
-        setTransactionCode('');
       } else {
         setIsProcessing(false);
         setTransactionCode('');
-        setAuthError("❌ Wrong Input - Please try again.");
+        setAuthError("❌ ACCESS DENIED: Invalid or expired passkey. Please request a new one from your administrator.");
         setTimeout(() => setAuthError(null), 3000);
       }
     }, 800);
   };
 
   const generateNextAdminKey = () => {
-    // Passkey is constant at 2007 - no changes needed
-    alert(`✅ PASSKEY CONFIGURATION\n\n🔐 Current Passkey: 2007\n\nThis is the CONSTANT passkey for all users and devices.\n\nIt will NEVER change automatically.\n\nTo change it, use the "Change Passkey" input field below.`);
+    // Get current values from localStorage (source of truth for cross-device sync)
+    const currentPasskey = localStorage.getItem('current_passkey') || '2025';
+    const currentBurned = JSON.parse(localStorage.getItem('burned_codes') || '[]');
+    
+    // Mark current passkey as used
+    if (!currentBurned.includes(currentPasskey)) {
+      currentBurned.push(currentPasskey);
+      localStorage.setItem('burned_codes', JSON.stringify(currentBurned));
+      setUsedCodes(currentBurned);
+    }
+    
+    // Generate next key
+    const nextKey = (parseInt(currentPasskey) + 1).toString();
+    localStorage.setItem('current_passkey', nextKey);
+    setCurrentRequiredPasskey(nextKey);
+    alert(`✅ New passkey generated successfully!\n\nNew Active Passkey: ${nextKey}\n\nAll devices will be updated automatically. Old passkey (${currentPasskey}) is now expired worldwide.`);
   };
 
   const resetForNew = () => {
@@ -137,7 +164,7 @@ const App: React.FC = () => {
   };
 
   const handleAdminLogin = () => {
-    if (adminAuth.user === 'ADMIN' && adminAuth.pass === '2007') {
+    if (adminAuth.user === 'ADMIN' && adminAuth.pass === '2025') {
       setAdminAuth(prev => ({ ...prev, loggedIn: true }));
     } else {
       alert("Invalid Admin Credentials");
@@ -145,24 +172,13 @@ const App: React.FC = () => {
   };
 
   const resetPasskeySequence = () => {
-    if (confirm("🔐 Passkey is CONSTANT at 2007.\n\nIt will work for unlimited users and devices.\n\nNo reset needed - everyone uses: 2007")) {
-      localStorage.setItem('current_passkey', '2007');
-      setCurrentRequiredPasskey('2007');
-      alert("✅ Confirmed: Passkey is 2007 (constant for all devices)");
+    if (confirm("⚠️ Reset passkey sequence back to 2025? This will clear all usage history and affect ALL devices.\n\nAre you sure?")) {
+      setUsedCodes([]);
+      setCurrentRequiredPasskey('2025');
+      localStorage.setItem('burned_codes', JSON.stringify([]));
+      localStorage.setItem('current_passkey', '2025');
+      alert("✅ Passkey sequence reset. All devices will update automatically.");
     }
-  };
-
-  const changePasskey = () => {
-    if (!newPasskeyInput.trim()) {
-      alert("❌ Please enter a new passkey");
-      return;
-    }
-    
-    const newKey = newPasskeyInput.trim();
-    localStorage.setItem('current_passkey', newKey);
-    setCurrentRequiredPasskey(newKey);
-    setNewPasskeyInput('');
-    alert(`✅ Passkey changed successfully!\n\nNew Passkey: ${newKey}\n\nAll devices will sync automatically.\n\nOld passkey (2025) is now invalid.`);
   };
 
   // Build fallback from dataset with real KUCCPS formula and cutoffs
@@ -210,52 +226,53 @@ const App: React.FC = () => {
     setShowCourseModal(true);
     setIsGeneratingCourses(true);
     setGeneratedCourses('');
-
-    // Build subjects array from selectedGrades
-    const subjects = Object.entries(selectedGrades).map(([code, grade]) => ({ code: code.toUpperCase(), grade }));
-
+    
     try {
-      const resp = await fetch((import.meta as any)?.env?.VITE_API_BASE_URL ? `${(import.meta as any).env.VITE_API_BASE_URL}/api/calculate` : 'http://localhost:4000/api/calculate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subjects })
+      const apiKey = process.env.API_KEY || (import.meta as any)?.env?.VITE_GOOGLE_API_KEY;
+
+      if (!apiKey) {
+        const fallback = buildFallbackFromDataset(cluster.id, cluster.name, selectedGrades);
+        setGeneratedCourses(fallback);
+        setIsGeneratingCourses(false);
+        return;
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      const weight = calculationResults.clusterWeights[cluster.id];
+      const totalPoints = calculationResults.totalPoints;
+      const meanGrade = calculationResults.meanGrade;
+
+      const prompt = `Student Profile for KUCCPS 2025 Placement:
+- PRIMARY FACTOR: Mean Grade of ${meanGrade}
+- PRIMARY FACTOR: Total Points of ${totalPoints} / 84
+- Target Cluster: "${cluster.name}" (Cluster Group ${cluster.id})
+- Calculated Cluster Weight: ${weight.toFixed(3)}
+
+Task: Act as an expert Kenyan University Placement Consultant. Based STRICTLY on the student's Mean Grade of ${meanGrade} and Total Points of ${totalPoints}, suggest 10 highly realistic degree or diploma courses within the "${cluster.name}" category.
+
+Guidelines:
+1. Ensure the courses listed are actually attainable for someone with a Mean Grade of ${meanGrade}. (e.g., if grade is below C+, focus on Diploma courses).
+2. For each suggestion, provide:
+   - Course Name
+   - 2-3 specific Kenyan Universities/Colleges offering it.
+   - A brief justification explaining how their ${totalPoints} total points and ${weight.toFixed(3)} cluster weight makes them a strong candidate for this specific placement.
+3. Be professional, accurate to current KUCCPS trends, and encouraging.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: prompt,
       });
-
-      if (!resp.ok) throw new Error('API error');
-      const data = await resp.json();
-
-      // Build a simple HTML table for the modal
-      const rows = data.clusters.map((c: any) => `| Cluster ${c.id} | ${c.name} | ${c.points.toFixed ? c.points.toFixed(3) : c.points} | ${c.missingCore && c.missingCore.length ? 'MISSING CORE: ' + c.missingCore.join(', ') : 'OK'} |`).join('\n');
-
-      let table = `Cluster Points Summary:\n\n`;
-      table += data.clusters.map((c: any, i: number) => `${c.id}. ${c.name} — ${c.points.toFixed ? c.points.toFixed(3) : c.points}${c.missingCore && c.missingCore.length ? ' (MISSING CORE: ' + c.missingCore.join(', ') + ')' : ''}`).join('\n');
-
-      table += `\n\nRecommended summary (per cluster):\n`;
-      table += data.recommendedCourses.map((r: any, idx: number) => `- Cluster ${r.clusterId}: ${r.clusterName} — ${r.points} pts — Eligible: ${r.eligible ? 'YES' : 'NO'} (Top: ${r.topUniversities.map((u:any)=>u.university).join(', ')})`).join('\n');
-
-      setGeneratedCourses(table);
+      
+      setGeneratedCourses(response.text || 'Unable to generate suggestions at this time.');
     } catch (e) {
-      console.error('viewCourses API error:', e);
-      // fallback to the existing AI / local dataset flow
+      console.error('Error in viewCourses:', e);
+      // On any error, fall back to local dataset with real formula
       try {
-        const apiKey = process.env.API_KEY || (import.meta as any)?.env?.VITE_GOOGLE_API_KEY;
-        if (!apiKey) {
-          const fallback = buildFallbackFromDataset(cluster.id, cluster.name, selectedGrades);
-          setGeneratedCourses(fallback);
-        } else {
-          const ai = new GoogleGenAI({ apiKey });
-          const weight = calculationResults.clusterWeights[cluster.id];
-          const totalPoints = calculationResults.totalPoints;
-          const meanGrade = calculationResults.meanGrade;
-
-          const prompt = `Student Profile for KUCCPS 2025 Placement:\n- PRIMARY FACTOR: Mean Grade of ${meanGrade}\n- PRIMARY FACTOR: Total Points of ${totalPoints} / 84\n- Target Cluster: "${cluster.name}" (Cluster Group ${cluster.id})\n- Calculated Cluster Weight: ${weight.toFixed(3)}\n\nTask: Act as an expert Kenyan University Placement Consultant. Based STRICTLY on the student's Mean Grade of ${meanGrade} and Total Points of ${totalPoints}, suggest 10 highly realistic degree or diploma courses within the "${cluster.name}" category.`;
-
-          const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
-          setGeneratedCourses(response.text || 'Unable to generate suggestions at this time.');
-        }
+        const fallback = buildFallbackFromDataset(cluster.id, cluster.name, selectedGrades);
+        setGeneratedCourses(fallback);
       } catch (ex) {
         console.error('Error in fallback:', ex);
-        setGeneratedCourses(`📖 Local Advisor Fallback\n\nApologies, the advisor is temporarily unavailable. Please try again in a moment or contact your administrator.`);
+        setGeneratedCourses(`📖 Local Advisor Fallback\n\nApologies, the advisor is temporarily unavailable. Please try again in a moment or contact your administrator.\n\nError details: ${ex instanceof Error ? ex.message : 'Unknown error'}`);
       }
     } finally {
       setIsGeneratingCourses(false);
@@ -265,7 +282,7 @@ const App: React.FC = () => {
   if (showSuccessTick) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-slate-900">
-        <div className="w-24 h-24 bg-red-500 rounded-full flex items-center justify-center animate-bounce shadow-2xl">
+        <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center animate-bounce shadow-2xl">
           <i className="fas fa-check text-white text-4xl"></i>
         </div>
         <h2 className="mt-8 text-2xl font-black text-slate-800 dark:text-white uppercase tracking-widest text-center">Authenticated</h2>
@@ -274,34 +291,33 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className={`${isDarkMode ? 'dark bg-slate-900 text-white' : 'bg-gradient-to-br from-white via-red-50 to-rose-50 text-slate-900'} min-h-screen pb-12 transition-colors flex flex-col relative`}
+    <div className={`${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 text-slate-900'} min-h-screen pb-12 transition-colors flex flex-col relative`}
     style={{
-      backgroundImage: !isDarkMode ? `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 40 0 L 0 0 0 40' fill='none' stroke='rgba(220,38,38,0.05)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23grid)'/%3E%3C/svg%3E")` : undefined,
+      backgroundImage: !isDarkMode ? `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 40 0 L 0 0 0 40' fill='none' stroke='rgba(59,130,246,0.08)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23grid)'/%3E%3C/svg%3E")` : undefined,
       backgroundAttachment: 'fixed'
     }}>
-      {/* Decorative elements for graduate forum theme - RED/WHITE BLEND */}
+      {/* Professional blue/teal gradient decorative blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-10 left-10 w-72 h-72 bg-red-200 dark:bg-red-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-rose-200 dark:bg-rose-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-200 dark:bg-pink-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-10 left-10 w-80 h-80 bg-blue-300 dark:bg-blue-900/30 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-pulse"></div>
+        <div className="absolute top-40 right-10 w-80 h-80 bg-indigo-300 dark:bg-indigo-900/30 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute -bottom-8 left-20 w-80 h-80 bg-cyan-300 dark:bg-cyan-900/30 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-pulse" style={{animationDelay: '4s'}}></div>
       </div>
-
-      {/* Graduation forum banner - RED/WHITE theme */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-rose-600 to-red-600"></div>
-      <nav className="sticky top-0 z-50 bg-white dark:bg-slate-800 p-4 shadow-sm flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
-        <div className="flex items-center gap-2">
-          <div className="bg-gradient-to-r from-red-600 to-rose-600 text-white p-2 rounded-lg"><i className="fas fa-bolt"></i></div>
-          <h1 className="text-xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-rose-700\">KUCCPS<span className="text-red-600\">PRO</span></h1>
+      {/* Professional gradient banner */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600"></div>
+      <nav className="sticky top-0 z-50 bg-gradient-to-r from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 p-4 shadow-lg flex justify-between items-center border-b-2 border-blue-200 dark:border-indigo-900">
+        <div className="flex items-center gap-3">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-2.5 rounded-xl shadow-lg"><i className="fas fa-graduation-cap font-bold text-lg"></i></div>
+          <h1 className="text-2xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700">KUCCPS<span className="text-indigo-600 font-black\">PRO</span></h1>
         </div>
         <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center transition-transform active:scale-90">
           <i className={`fas ${isDarkMode ? 'fa-sun text-yellow-400' : 'fa-moon text-slate-600'}`}></i>
         </button>
       </nav>
 
-      <main className="max-w-4xl mx-auto w-full px-4 mt-8 flex-1 relative z-10">
+            <main className="max-w-4xl mx-auto w-full px-4 mt-8 flex-1 relative z-10">
         {step === AppStep.Input && (
           <div className="relative min-h-screen rounded-[2.5rem] p-8 shadow-xl border border-slate-100 dark:border-slate-700 space-y-8 overflow-hidden" style={{
-            backgroundImage: 'url("data:image/svg+xml,%3Csvg width="1200" height="800" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"%3E%3Cdefs%3E%3ClinearGradient id="grad1" x1="0%25" y1="0%25" x2="100%25" y2="100%25"%3E%3Cstop offset="0%25" style="stop-color:%23dc2626;stop-opacity:0.9" /%3E%3Cstop offset="50%25" style="stop-color:%23f87171;stop-opacity:0.7" /%3E%3Cstop offset="100%25" style="stop-color:%23fca5a5;stop-opacity:0.5" /%3E%3C/linearGradient%3E%3ClinearGradient id="grad2" x1="100%25" y1="0%25" x2="0%25" y2="100%25"%3E%3Cstop offset="0%25" style="stop-color:%23ffffff;stop-opacity:0.8" /%3E%3Cstop offset="50%25" style="stop-color:%23f5f5f5;stop-opacity:0.6" /%3E%3Cstop offset="100%25" style="stop-color:%23fef2f2;stop-opacity:0.4" /%3E%3C/linearGradient%3E%3Cfilter id="blur"%3E%3CfeGaussianBlur in="SourceGraphic" stdDeviation="3" /%3E%3C/filter%3E%3C/defs%3E%3Crect width="1200" height="800" fill="url(%23grad1)" /%3E%3Crect width="1200" height="800" fill="url(%23grad2)" opacity="0.6" /%3E%3Ccircle cx="100" cy="100" r="200" fill="%23fecaca" opacity="0.3" filter="url(%23blur)" /%3E%3Ccircle cx="1100" cy="700" r="250" fill="%23dc2626" opacity="0.15" filter="url(%23blur)" /%3E%3Ccircle cx="600" cy="400" r="300" fill="%23ffffff" opacity="0.1" filter="url(%23blur)" /%3E%3Cpath d="M0,0 Q300,100 600,50 T1200,100 L1200,0 Z" fill="%23ffffff" opacity="0.2" /%3E%3Cpath d="M0,800 Q300,700 600,750 T1200,700 L1200,800 Z" fill="%23dc2626" opacity="0.15" /%3E%3C/svg%3E")' as any,
+            backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\"1200\" height=\"800\" viewBox=\"0 0 1200 800\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cdefs%3E%3ClinearGradient id=\"grad1\" x1=\"0%25\" y1=\"0%25\" x2=\"100%25\" y2=\"100%25\"%3E%3Cstop offset=\"0%25\" style=\"stop-color:%23dc2626;stop-opacity:0.9\" /%3E%3Cstop offset=\"50%25\" style=\"stop-color:%23f87171;stop-opacity:0.7\" /%3E%3Cstop offset=\"100%25\" style=\"stop-color:%23fca5a5;stop-opacity:0.5\" /%3E%3C/linearGradient%3E%3ClinearGradient id=\"grad2\" x1=\"100%25\" y1=\"0%25\" x2=\"0%25\" y2=\"100%25\"%3E%3Cstop offset=\"0%25\" style=\"stop-color:%23ffffff;stop-opacity:0.8\" /%3E%3Cstop offset=\"50%25\" style=\"stop-color:%23f5f5f5;stop-opacity:0.6\" /%3E%3Cstop offset=\"100%25\" style=\"stop-color:%23fef2f2;stop-opacity:0.4\" /%3E%3C/linearGradient%3E%3Cfilter id=\"blur\"%3E%3CfeGaussianBlur in=\"SourceGraphic\" stdDeviation=\"3\" /%3E%3C/filter%3E%3C/defs%3E%3Crect width=\"1200\" height=\"800\" fill=\"url(%23grad1)\" /%3E%3Crect width=\"1200\" height=\"800\" fill=\"url(%23grad2)\" opacity=\"0.6\" /%3E%3Ccircle cx=\"100\" cy=\"100\" r=\"200\" fill=\"%23fecaca\" opacity=\"0.3\" filter=\"url(%23blur)\" /%3E%3Ccircle cx=\"1100\" cy=\"700\" r=\"250\" fill=\"%23dc2626\" opacity=\"0.15\" filter=\"url(%23blur)\" /%3E%3Ccircle cx=\"600\" cy=\"400\" r=\"300\" fill=\"%23ffffff\" opacity=\"0.1\" filter=\"url(%23blur)\" /%3E%3Cpath d=\"M0,0 Q300,100 600,50 T1200,100 L1200,0 Z\" fill=\"%23ffffff\" opacity=\"0.2\" /%3E%3Cpath d=\"M0,800 Q300,700 600,750 T1200,700 L1200,800 Z\" fill=\"%23dc2626\" opacity=\"0.15\" /%3E%3C/svg%3E")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundAttachment: 'fixed'
@@ -309,13 +325,13 @@ const App: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 via-white/30 to-rose-300/20 rounded-[2.5rem] pointer-events-none"></div>
             <div className="absolute inset-0 backdrop-blur-sm rounded-[2.5rem] pointer-events-none"></div>
             <div className="relative z-20 bg-white/95 dark:bg-red-900/70 dark:backdrop-blur-md rounded-[2.5rem] p-8 shadow-2xl border border-red-200/50 dark:border-red-600/50 space-y-8">
-              <h2 className="text-4xl font-black uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-900">Grade Entry</h2>
+              <h2 className="text-4xl font-black uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700">📝 Grade Entry Portal</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {SUBJECTS.map(subj => (
                   <div key={subj.id}>
-                    <label className="text-[10px] font-black uppercase text-red-600 dark:text-red-400 block mb-2">{subj.name}</label>
+                    <label className="text-[10px] font-black uppercase text-blue-700 dark:text-blue-300 block mb-2">{subj.name}</label>
                     <select
-                      className="w-full bg-white dark:bg-red-950 border-2 border-transparent focus:border-red-500 dark:focus:border-red-400 rounded-xl p-3 font-bold transition-all outline-none text-slate-900 dark:text-white shadow-md hover:shadow-lg"
+                      className="w-full bg-white dark:bg-indigo-950 border-2 border-transparent focus:border-blue-500 dark:focus:border-indigo-400 rounded-xl p-3 font-bold transition-all outline-none text-slate-900 dark:text-white shadow-md hover:shadow-lg"
                       value={selectedGrades[subj.id] || ''}
                       onChange={(e) => handleGradeChange(subj.id, e.target.value as Grade)}
                     >
@@ -328,7 +344,7 @@ const App: React.FC = () => {
               <button
                 onClick={() => setStep(AppStep.Payment)}
                 disabled={Object.keys(selectedGrades).length < 7}
-                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-black py-4 rounded-xl shadow-lg transition-all disabled:opacity-50 uppercase tracking-widest active:scale-[0.98]"
+                className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-black py-4 rounded-xl shadow-lg transition-all disabled:opacity-50 uppercase tracking-widest active:scale-[0.98] shadow-indigo-500/20"
               >
                 Next: Verify Access
               </button>
@@ -337,9 +353,9 @@ const App: React.FC = () => {
         )}
 
         {step === AppStep.Payment && (
-          <div className="bg-gradient-to-br from-white to-red-50 dark:from-red-900 dark:to-slate-900 rounded-[2.5rem] p-8 shadow-xl border-2 border-red-200 dark:border-red-700 space-y-10 animate-in slide-in-from-bottom-4 text-center overflow-hidden">
+          <div className="bg-gradient-to-br from-white to-blue-50 dark:from-indigo-900/30 dark:to-slate-900 rounded-[2.5rem] p-8 shadow-xl border-2 border-blue-200 dark:border-indigo-700 space-y-10 animate-in slide-in-from-bottom-4 text-center overflow-hidden">
             <div className="space-y-4">
-              <h2 className="text-3xl font-black uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-900">Access Verification</h2>
+              <h2 className="text-3xl font-black uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700">🔐 Access Verification</h2>
               
               {authError ? (
                 <div className="bg-red-100 dark:bg-red-900/40 p-6 rounded-2xl border-2 border-red-500 animate-bounce shadow-lg">
@@ -349,19 +365,19 @@ const App: React.FC = () => {
                     </p>
                 </div>
               ) : (
-                <div className="bg-red-50 dark:bg-red-950/30 p-6 rounded-2xl border-2 border-dashed border-red-300 dark:border-red-600">
-                    <p className="font-bold text-red-700 dark:text-red-300 text-sm">Please enter the Passkey provided by the administrator.</p>
+                <div className="bg-blue-50 dark:bg-indigo-950/30 p-6 rounded-2xl border-2 border-dashed border-blue-300 dark:border-indigo-600">
+                    <p className="font-bold text-blue-700 dark:text-indigo-300 text-sm">Please enter the Passkey provided by the administrator.</p>
                 </div>
               )}
             </div>
 
             <div className="space-y-6">
               <div className="space-y-2 text-left">
-                <label className="text-[10px] font-black uppercase text-red-600 dark:text-red-400 tracking-widest block ml-1">Current Passkey</label>
+                <label className="text-[10px] font-black uppercase text-blue-700 dark:text-blue-300 tracking-widest block ml-1">Current Passkey</label>
                 <input
                   type="text"
                   placeholder="Enter Passkey"
-                  className={`w-full bg-white dark:bg-red-950 rounded-2xl p-6 font-black outline-none border-2 transition-all uppercase tracking-[0.5em] text-slate-900 dark:text-white text-center text-4xl shadow-inner ${authError ? 'border-red-600 ring-4 ring-red-500/20' : 'border-red-200 dark:border-red-600 focus:border-red-600 dark:focus:border-red-400'}`}
+                  className={`w-full bg-white dark:bg-indigo-950 rounded-2xl p-6 font-black outline-none border-2 transition-all uppercase tracking-[0.5em] text-slate-900 dark:text-white text-center text-4xl shadow-inner ${authError ? 'border-red-600 ring-4 ring-red-500/20' : 'border-blue-200 dark:border-indigo-600 focus:border-blue-600 dark:focus:border-indigo-400'}`}
                   value={transactionCode}
                   onChange={e => {
                     setTransactionCode(e.target.value);
@@ -372,7 +388,7 @@ const App: React.FC = () => {
               <button
                 onClick={verifyAccess}
                 disabled={isProcessing || !transactionCode}
-                className={`w-full text-white font-black py-5 rounded-2xl shadow-xl transition-all uppercase tracking-widest text-lg active:scale-[0.98] ${authError ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800' : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:opacity-50'}`}
+                className={`w-full text-white font-black py-5 rounded-2xl shadow-xl transition-all uppercase tracking-widest text-lg active:scale-[0.98] bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 disabled:opacity-50 shadow-indigo-500/20`}
               >
                 {isProcessing ? (
                     <div className="flex items-center justify-center gap-3">
@@ -389,172 +405,72 @@ const App: React.FC = () => {
 
         {step === AppStep.Results && (
           <div className="space-y-8 animate-in zoom-in-95">
-            <div className="bg-gradient-to-r from-white to-red-50 dark:from-red-900 dark:to-slate-900 rounded-[2.5rem] p-10 shadow-xl border-t-[12px] border-red-600 flex flex-col md:flex-row justify-between items-center">
+            <div className="bg-gradient-to-r from-white to-blue-50 dark:from-indigo-900/20 dark:to-slate-900 rounded-[2.5rem] p-10 shadow-xl border-t-[12px] border-blue-600 flex flex-col md:flex-row justify-between items-center">
               <div>
-                <p className="text-[10px] font-black text-red-600 dark:text-red-400 uppercase tracking-widest">Mean Grade</p>
-                <h2 className="text-8xl font-black text-red-600 dark:text-red-500 tracking-tighter">{calculationResults.meanGrade}</h2>
+                <p className="text-[10px] font-black text-blue-700 dark:text-blue-300 uppercase tracking-widest">Mean Grade</p>
+                <h2 className="text-8xl font-black text-blue-600 dark:text-blue-400 tracking-tighter">{calculationResults.meanGrade}</h2>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-black text-red-600 dark:text-red-400 uppercase tracking-widest">Total Points</p>
-                <h2 className="text-8xl font-black text-red-700 dark:text-red-400 tracking-tighter">{calculationResults.totalPoints}</h2>
+                <p className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-widest">Total Points</p>
+                <h2 className="text-8xl font-black text-indigo-600 dark:text-indigo-400 tracking-tighter">{calculationResults.totalPoints}</h2>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {CLUSTERS.map(cluster => (
-                <div key={cluster.id} className="bg-white dark:bg-red-900/30 p-8 rounded-[2.5rem] border-2 border-red-200 dark:border-red-600 hover:border-red-500 shadow-xl flex flex-col justify-between items-stretch transition-all group relative overflow-hidden">
+                <div key={cluster.id} className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-700 hover:border-green-500 shadow-xl flex flex-col justify-between items-stretch transition-all group relative overflow-hidden">
                   <div className="mb-6">
-                    <div className="flex items-center gap-1 mb-3">
-                        <span className="text-[9px] font-bold text-red-600 dark:text-red-400 uppercase tracking-widest">Cluster {cluster.id}</span>
-                    </div>
-                    <div className="flex items-start gap-2 mb-6">
-                        <div className="w-3 h-3 bg-red-500 rounded-full mt-1 flex-shrink-0"></div>
-                        <h3 className="font-black text-xl leading-tight text-slate-900 dark:text-white tracking-tight">{cluster.name}</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <h3 className="font-black text-[10px] uppercase text-slate-400 tracking-widest">{cluster.name}</h3>
                     </div>
                     
                     <div className="flex items-end gap-2">
-                        <p className="text-6xl font-black text-red-600 dark:text-red-400 tracking-tighter leading-none">
+                        <p className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
                             {calculationResults.clusterWeights[cluster.id].toFixed(3)}
                         </p>
-                        <span className="text-[10px] font-black text-red-600 dark:text-red-400 uppercase mb-2">Weight</span>
+                        <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase mb-2">Weight</span>
                     </div>
                   </div>
                   
                   <div className="space-y-3">
                     <button 
                         onClick={() => viewCourses(cluster)}
-                        disabled={false}
-                        className="w-full text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-md transition-all active:scale-[0.97] flex items-center justify-center gap-3 border-2 border-transparent bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 dark:hover:border-white/10 cursor-pointer"
+                        disabled={!calculationResults.clusterEligibility[cluster.id]?.isEligible}
+                        className={`w-full text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-md transition-all active:scale-[0.97] flex items-center justify-center gap-3 border-2 border-transparent ${
+                          calculationResults.clusterEligibility[cluster.id]?.isEligible 
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white dark:hover:border-white/10 cursor-pointer' 
+                            : 'bg-slate-400 dark:bg-slate-600 cursor-not-allowed opacity-60'
+                        }`}
                         title={
                           !calculationResults.clusterEligibility[cluster.id]?.isEligible 
-                            ? `View courses (Missing: ${calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')})`
-                            : 'View available courses for this cluster'
+                            ? `Missing: ${calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')}`
+                            : ''
                         }
                     >
-                        <i className="fas fa-book-open text-[0.8em]"></i>
-                        View Courses
+                        <i className={`fas ${calculationResults.clusterEligibility[cluster.id]?.isEligible ? 'fa-magic' : 'fa-lock'} text-[0.8em]`}></i>
+                        {calculationResults.clusterEligibility[cluster.id]?.isEligible ? 'View My Courses' : 'Locked'}
                     </button>
                     {!calculationResults.clusterEligibility[cluster.id]?.isEligible && (
-                      <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg p-3">
+                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
                         <p className="text-[9px] font-bold text-red-700 dark:text-red-300">
-                          ⚠️ Missing subjects: {calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')}
+                          🔒 Missing: {calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')}
                         </p>
                       </div>
                     )}
                   </div>
                   
-                  <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-red-500/5 rounded-full blur-3xl group-hover:bg-red-500/20 transition-all duration-500"></div>
+                  <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-all duration-500\"></div>
                 </div>
               ))}
             </div>
 
-            {/* GENERAL SUMMARY BUTTON */}
-            <div className="flex justify-center mt-10">
-              <button
-                onClick={() => {
-                  // Collect all eligible clusters and their courses
-                  const eligible = CLUSTERS.filter(c => calculationResults.clusterEligibility[c.id]?.isEligible);
-                  const summary = eligible.map(cluster => ({
-                    clusterId: cluster.id,
-                    clusterName: cluster.name,
-                    courses: CLUSTER_COURSES[cluster.id] || [],
-                    points: calculationResults.clusterWeights[cluster.id]
-                  }));
-                  setSummaryData(summary);
-                  setShowSummary(true);
-                }}
-                className="px-8 py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-black uppercase tracking-wider rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-95 text-sm"
-              >
-                📋 View General Summary - All Eligible Courses
-              </button>
-            </div>
-
-            {/* GENERAL SUMMARY MODAL */}
-            {showSummary && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white dark:bg-slate-800 rounded-[2rem] max-w-4xl w-full max-h-[80vh] overflow-y-auto shadow-2xl\">
-                  <div className="sticky top-0 bg-gradient-to-r from-red-600 to-red-700 p-6 flex justify-between items-center\">
-                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">📋 General Summary - Your Eligible Courses</h2>
-                    <button
-                      onClick={() => setShowSummary(false)}
-                      className="text-white hover:bg-red-700 p-2 rounded-lg transition-all"
-                    >
-                      <i className="fas fa-times text-xl"></i>
-                    </button>
-                  </div>
-                  
-                  <div className="p-8 space-y-6">
-                    {summaryData.length === 0 ? (
-                      <div className="text-center py-12">
-                        <p className="text-slate-500 dark:text-slate-400 text-lg">No eligible clusters found. Please check your subject selections.</p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                          <p className="text-sm font-bold text-red-700 dark:text-red-300">
-                            ✅ You are eligible for <span className="font-black">{summaryData.length}</span> cluster{summaryData.length !== 1 ? 's' : ''} with <span className="font-black">{summaryData.reduce((sum: number, s: any) => sum + (Array.isArray(s.courses) ? s.courses.length : 0), 0)}</span> total courses
-                          </p>
-                        </div>
-
-                        {summaryData.map((cluster) => (
-                          <div key={cluster.clusterId} className="border-l-4 border-red-500 pl-6 py-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg\">
-                            <div className="flex items-start justify-between mb-3">
-                              <div>
-                                <h3 className="font-black text-lg text-slate-900 dark:text-white">
-                                  Cluster {cluster.clusterId}: {cluster.clusterName}
-                                </h3>
-                                <p className="text-sm font-bold text-green-600 dark:text-green-400">
-                                  Points: {cluster.points.toFixed(3)} | Courses: {Array.isArray(cluster.courses) ? cluster.courses.length : 0}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                              {Array.isArray(cluster.courses) && cluster.courses.length > 0 ? (
-                                cluster.courses.map((courseItem: any, idx: number) => (
-                                  <div key={idx} className="bg-white dark:bg-slate-800 p-3 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                                    <div>✓ {typeof courseItem === 'string' ? courseItem : courseItem.course}</div>
-                                    {courseItem.universities && (
-                                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                        {Array.isArray(courseItem.universities) ? courseItem.universities.slice(0, 2).join(', ') : ''}
-                                        {courseItem.universities && courseItem.universities.length > 2 ? '...' : ''}
-                                      </div>
-                                    )}
-                                    {courseItem.level && (
-                                      <div className="text-xs font-bold text-green-600 dark:text-green-400 mt-1 uppercase">
-                                        {courseItem.level}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))
-                              ) : (
-                                <div className="col-span-full text-center py-4 text-slate-500">
-                                  No courses available for this cluster
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-
-                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mt-8">
-                          <h4 className="font-black text-red-900 dark:text-red-100 mb-2">📌 Recommendation</h4>
-                          <p className="text-sm text-red-800 dark:text-red-200">
-                            You have secured access to all eligible courses above. Select your top choice based on your career interests and the competitiveness of the programme. Universities will rank candidates based on cluster points and subject performance.
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* CAREER GUIDANCE AND PRO TIPS SECTION */}
             <div className="mt-20 space-y-10">
               <div className="flex flex-col items-center text-center space-y-2">
-                <h3 className="text-xs font-black uppercase text-red-600 tracking-[0.4em]">Student Resource Center</h3>
+                <h3 className="text-xs font-black uppercase text-indigo-700 dark:text-indigo-300 tracking-[0.4em]\">Student Resource Center</h3>
                 <h2 className="text-3xl font-black uppercase tracking-tight text-slate-800 dark:text-white">Pro Tips & Career Guidance</h2>
-                <div className="h-1 w-20 bg-red-600 rounded-full"></div>
+                <div className="h-1 w-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full\"></div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -589,11 +505,11 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-slate-900 dark:bg-red-600/10 p-10 rounded-[3rem] border border-slate-800 dark:border-red-500/20 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
-                <div className="space-y-4">
-                  <div className="inline-flex items-center gap-2 bg-red-500/20 px-3 py-1 rounded-full border border-red-500/30">
-                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                    <span className="text-[10px] font-black text-red-400 uppercase tracking-widest">2025 Placement Cycle</span>
+              <div className="bg-gradient-to-r from-slate-900 to-slate-800 dark:from-indigo-900/20 dark:to-slate-900 p-10 rounded-[3rem] border border-slate-700 dark:border-indigo-500/20 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left\">
+                <div className="space-y-4\">
+                  <div className="inline-flex items-center gap-2 bg-indigo-500/20 px-3 py-1 rounded-full border border-indigo-500/30\">
+                    <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse\"></span>
+                    <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest\">2025 Placement Cycle</span>
                   </div>
                   <h3 className="text-2xl font-black text-white uppercase tracking-tight">Need to try a different scenario?</h3>
                   <p className="text-slate-400 text-sm max-w-md font-medium">
@@ -602,7 +518,7 @@ const App: React.FC = () => {
                 </div>
                 <button 
                   onClick={resetForNew} 
-                  className="bg-white text-slate-900 px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:bg-red-600 hover:text-white transition-all shadow-2xl active:scale-95 whitespace-nowrap"
+                  className="bg-white text-slate-900 px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:bg-indigo-600 hover:text-white transition-all shadow-2xl active:scale-95 whitespace-nowrap\"
                 >
                   New Calculation
                 </button>
@@ -662,7 +578,7 @@ const App: React.FC = () => {
             ) : (
               <div className="space-y-6 overflow-y-auto pr-2">
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-8 rounded-3xl border-2 border-green-500/30 text-center shadow-lg shadow-green-600/10">
-                  <h3 className="text-xs font-black uppercase text-red-600 tracking-[0.2em] mb-4 flex items-center justify-center gap-2">
+                  <h3 className="text-xs font-black uppercase text-green-600 tracking-[0.2em] mb-4 flex items-center justify-center gap-2">
                     <i className="fas fa-key"></i> Active Passkey
                   </h3>
                   <div className="relative group">
@@ -672,11 +588,11 @@ const App: React.FC = () => {
                   </div>
                   <button 
                     onClick={generateNextAdminKey}
-                    className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white font-black py-4 rounded-2xl uppercase tracking-widest hover:from-red-700 hover:to-red-800 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                    className="w-full bg-green-600 text-white font-black py-4 rounded-2xl uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
                   >
                     <i className="fas fa-plus-circle"></i> Generate Next Passkey
                   </button>
-                  <p className="text-[9px] font-bold text-slate-400 mt-4 uppercase tracking-wider\">Hand this code to the user for one-time access</p>
+                  <p className="text-[9px] font-bold text-slate-400 mt-4 uppercase tracking-wider">Hand this code to the user for one-time access</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -710,71 +626,12 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 p-8 rounded-3xl border-2 border-purple-300 dark:border-purple-700/50 shadow-lg">
-                  <div className="flex items-start justify-between mb-6">
-                    <div>
-                      <h3 className="text-xs font-black uppercase text-purple-600 dark:text-purple-300 tracking-[0.2em] mb-2 flex items-center gap-2">
-                        <i className="fas fa-lock-open"></i> Security Configuration
-                      </h3>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold">Manage access passkey for all users</p>
-                    </div>
-                    <div className="w-12 h-12 bg-purple-600/10 rounded-2xl flex items-center justify-center text-purple-600">
-                      <i className="fas fa-sliders-h text-lg"></i>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-widest mb-3 block">Current Active Passkey</label>
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 bg-white dark:bg-slate-900 border-2 border-purple-200 dark:border-purple-800 rounded-xl p-4 font-mono font-black text-lg text-purple-600 dark:text-purple-300 text-center tracking-widest">
-                          {currentRequiredPasskey}
-                        </div>
-                        <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center text-red-600 text-xl">
-                          <i className="fas fa-check-circle"></i>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl opacity-10 blur-lg"></div>
-                      <div className="relative bg-white dark:bg-slate-900 border-2 border-purple-300 dark:border-purple-700 rounded-2xl p-6">
-                        <label className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-widest mb-3 block">
-                          <i className="fas fa-exclamation-triangle text-orange-500 mr-2"></i> Change To New Passkey
-                        </label>
-                        <div className="flex gap-3">
-                          <input 
-                            type="text" 
-                            placeholder="Enter new passkey (e.g., 5050)" 
-                            className="flex-1 bg-slate-50 dark:bg-slate-800 p-4 rounded-xl font-black outline-none border-2 border-purple-200 dark:border-purple-800 focus:border-purple-500 text-slate-900 dark:text-white text-sm"
-                            value={newPasskeyInput}
-                            onChange={e => setNewPasskeyInput(e.target.value)}
-                          />
-                          <button 
-                            onClick={changePasskey}
-                            className="px-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-black rounded-xl uppercase tracking-widest transition-all shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center gap-2 text-[10px]"
-                          >
-                            <i className="fas fa-sync-alt"></i> Update
-                          </button>
-                        </div>
-                        <p className="text-[8px] text-slate-400 dark:text-slate-500 mt-3 font-semibold">All devices will sync automatically. Previous passkey will be invalidated.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 pt-6">
+                <div className="grid grid-cols-1 gap-3 pt-6 border-t dark:border-slate-700">
                   <button 
                     onClick={resetPasskeySequence}
-                    className="w-full bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-800 border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-[10px] font-black py-4 rounded-2xl uppercase tracking-widest hover:from-slate-200 hover:to-slate-100 hover:border-slate-300 dark:hover:border-slate-500 transition-all flex items-center justify-center gap-2"
+                    className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-black py-4 rounded-xl uppercase tracking-widest hover:border-red-500 hover:text-red-500 transition-all"
                   >
-                    <i className="fas fa-redo"></i> Reset to 2025
-                  </button>
-                  <button 
-                    onClick={() => setIsAdminOpen(false)}
-                    className="w-full bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-[10px] font-black py-4 rounded-2xl uppercase tracking-widest transition-all shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center gap-2"
-                  >
-                    <i className="fas fa-times"></i> Close Panel
+                    Reset Sequence to 2025
                   </button>
                 </div>
               </div>
@@ -783,165 +640,33 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* KUCCPS Portal Course Modal */}
-      {showCourseModal && activeCluster && (
+      {/* AI Course Modal */}
+      {showCourseModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
-          <div className="bg-white dark:bg-slate-800 w-full max-w-4xl rounded-[2.5rem] overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
-            
-            {/* Header */}
-            <div className="p-8 border-b dark:border-slate-700 bg-gradient-to-r from-green-600 to-green-500 flex justify-between items-center sticky top-0">
-              <div className="text-white">
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] mb-1 block opacity-90">Cluster Placement Portal</span>
-                <h2 className="text-3xl font-black uppercase tracking-tight">Cluster {activeCluster.id}: {activeCluster.name}</h2>
+          <div className="bg-white dark:bg-slate-800 w-full max-w-3xl rounded-[2.5rem] overflow-hidden flex flex-col max-h-[85vh] shadow-2xl">
+            <div className="p-8 border-b dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
+              <div>
+                <span className="text-[10px] font-black text-green-600 uppercase tracking-[0.3em] mb-1 block">Admin Course Advisor</span>
+                <h2 className="text-xl font-black uppercase tracking-tight text-slate-800 dark:text-white">{activeCluster?.name}</h2>
               </div>
-              <button onClick={() => setShowCourseModal(false)} className="w-10 h-10 rounded-full hover:bg-white/20 flex items-center justify-center text-white transition-colors text-xl">
+              <button onClick={() => setShowCourseModal(false)} className="w-10 h-10 rounded-full hover:bg-white dark:hover:bg-slate-700 flex items-center justify-center text-slate-400 transition-colors">
                 <i className="fas fa-times"></i>
               </button>
             </div>
-
-            {/* Content */}
-            <div className="overflow-y-auto flex-1">
+            <div className="p-8 overflow-y-auto whitespace-pre-wrap font-medium leading-relaxed text-slate-700 dark:text-slate-300 scrollbar-thin">
               {isGeneratingCourses ? (
                 <div className="flex flex-col items-center justify-center py-24 gap-4">
                   <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="animate-pulse font-black text-xs uppercase tracking-widest text-slate-400 text-center">Loading cluster information...</p>
+                  <p className="animate-pulse font-black text-xs uppercase tracking-widest text-slate-400 text-center">Finding qualifying courses...</p>
                 </div>
               ) : (
-                <div className="p-8 space-y-8">
-                  
-                  {/* Minimum Requirements Section */}
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-lg p-6">
-                    <h3 className="font-black text-lg text-blue-900 dark:text-blue-100 mb-4 flex items-center gap-2">
-                      <i className="fas fa-clipboard-list"></i>
-                      MINIMUM SUBJECT REQUIREMENTS
-                    </h3>
-                    <div className="space-y-3">
-                      {activeCluster.subjects.map((group: string[], idx: number) => {
-                        const subjectNames = group.map(id => {
-                          const subj = SUBJECTS.find(s => s.id === id);
-                          return subj ? subj.name : id.toUpperCase();
-                        });
-                        
-                        return (
-                          <div key={idx} className="bg-white dark:bg-slate-700/50 p-4 rounded-lg">
-                            <p className="font-black text-slate-800 dark:text-white text-sm">
-                              Group {idx + 1}:
-                              <span className="font-semibold text-green-600 dark:text-green-400 ml-2">
-                                {subjectNames.join(' OR ')}
-                              </span>
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
-                      <p className="text-[12px] font-bold text-yellow-800 dark:text-yellow-200">
-                        ⚠️ You must have at least ONE subject from EACH group to qualify for this cluster
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Ineligibility Warning (if applicable) */}
-                  {!calculationResults.clusterEligibility[activeCluster.id]?.isEligible && (
-                    <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-lg p-6">
-                      <h3 className="font-black text-lg text-red-900 dark:text-red-100 mb-3 flex items-center gap-2">
-                        <i className="fas fa-exclamation-triangle"></i>
-                        ⚠️ YOU ARE NOT CURRENTLY ELIGIBLE FOR THIS CLUSTER
-                      </h3>
-                      <p className="text-sm text-red-800 dark:text-red-200 mb-3">
-                        Your current subject selections do not meet all requirements for this cluster.
-                      </p>
-                      <p className="text-sm font-bold text-red-800 dark:text-red-200">
-                        Missing: {calculationResults.clusterEligibility[activeCluster.id]?.missingSubjectNames.join(', ')}
-                      </p>
-                      <p className="text-[12px] text-red-700 dark:text-red-300 mt-3">
-                        You can still view the available courses, but you will need to have qualifying subjects in all groups to be eligible for placement in this cluster.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Your Performance Section */}
-                  <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-lg p-6">
-                    <h3 className="font-black text-lg text-red-900 dark:text-red-100 mb-4 flex items-center gap-2">
-                      <i className="fas fa-chart-line"></i>
-                      YOUR PLACEMENT SCORE FOR THIS CLUSTER
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="bg-white dark:bg-slate-700/50 p-4 rounded-lg text-center">
-                        <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Cluster Points</p>
-                        <p className={`text-3xl font-black ${calculationResults.clusterWeights[activeCluster.id] === 0 ? 'text-gray-500' : 'text-red-600'}`}>
-                          {String(calculationResults.clusterWeights[activeCluster.id]).padStart(2, '0')}
-                        </p>
-                      </div>
-                      <div className="bg-white dark:bg-slate-700/50 p-4 rounded-lg text-center">
-                        <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-2\">Total KCSE Points</p>
-                        <p className="text-3xl font-black text-blue-600\">{calculationResults.totalPoints}</p>
-                      </div>
-                      <div className="bg-white dark:bg-slate-700/50 p-4 rounded-lg text-center\">
-                        <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Mean Grade</p>
-                        <p className="text-3xl font-black text-purple-600">{calculationResults.meanGrade}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Available Courses Section */}
-                  <div className="bg-slate-50 dark:bg-slate-700/30 border-l-4 border-slate-500 rounded-lg p-6">
-                    <h3 className="font-black text-lg text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                      <i className="fas fa-book-open"></i>
-                      AVAILABLE COURSES IN THIS CLUSTER
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {CLUSTER_COURSES[activeCluster.id] && CLUSTER_COURSES[activeCluster.id].length > 0 ? (
-                        CLUSTER_COURSES[activeCluster.id].map((course: any, idx: number) => (
-                          <div key={idx} className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-green-400 transition-colors">
-                            <p className="font-black text-slate-900 dark:text-white text-sm mb-2">
-                              ✓ {course.course}
-                            </p>
-                            <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                              <span className="font-bold">Level:</span> {course.level}
-                            </p>
-                            {course.universities && course.universities.length > 0 && (
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
-                                <span className="font-bold">Universities:</span><br/>
-                                {course.universities.slice(0, 3).join(', ')}
-                                {course.universities.length > 3 ? '...' : ''}
-                              </p>
-                            )}
-                          </div>
-                        ))
-                      ) : (
-                        <p className="col-span-full text-center text-slate-500 py-8">No courses available for this cluster</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Recommendation */}
-                  <div className="bg-purple-50 dark:bg-purple-900/20 border-l-4 border-purple-500 rounded-lg p-6">
-                    <h3 className="font-black text-lg text-purple-900 dark:text-purple-100 mb-3 flex items-center gap-2">
-                      <i className="fas fa-lightbulb"></i>
-                      KUCCPS PLACEMENT ADVICE
-                    </h3>
-                    <p className="text-sm text-purple-800 dark:text-purple-200 leading-relaxed">
-                      Your cluster score of <strong>{calculationResults.clusterWeights[activeCluster.id].toFixed(3)} points</strong> makes you eligible for this cluster. 
-                      Select your preferred course from the list above. Universities will rank candidates based on cluster points and subject performance. 
-                      Courses marked as '<strong>degree</strong>' are bachelor programs, '<strong>diploma</strong>' are 2-3 year programs, 
-                      and '<strong>certificate</strong>' are specialized short courses.
-                    </p>
-                  </div>
-
+                <div className="prose dark:prose-invert max-w-none">
+                  {generatedCourses}
                 </div>
               )}
             </div>
-
-            {/* Footer */}
-            <div className="p-6 border-t dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-3">
-              <button onClick={() => setShowCourseModal(false)} className="bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600 text-slate-900 dark:text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
-                Close
-              </button>
-              <button onClick={() => setShowCourseModal(false)} className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-600/20 transition-all">
-                <i className="fas fa-check mr-2"></i>
-                Confirm Selection
-              </button>
+            <div className="p-6 border-t dark:border-slate-700 flex justify-end">
+              <button onClick={() => setShowCourseModal(false)} className="bg-green-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-green-600/20 transition-all hover:bg-green-700">Close Advisor</button>
             </div>
           </div>
         </div>
