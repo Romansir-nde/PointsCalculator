@@ -366,28 +366,12 @@ Guidelines:
                   <div className="space-y-3">
                     <button 
                         onClick={() => viewCourses(cluster)}
-                        disabled={!calculationResults.clusterEligibility[cluster.id]?.isEligible}
-                        className={`w-full text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-md transition-all active:scale-[0.97] flex items-center justify-center gap-3 border-2 border-transparent ${
-                          calculationResults.clusterEligibility[cluster.id]?.isEligible 
-                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white dark:hover:border-white/10 cursor-pointer' 
-                            : 'bg-slate-400 dark:bg-slate-600 cursor-not-allowed opacity-60'
-                        }`}
-                        title={
-                          !calculationResults.clusterEligibility[cluster.id]?.isEligible 
-                            ? `Missing: ${calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')}`
-                            : ''
-                        }
+                        className="w-full text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-md transition-all active:scale-[0.97] flex items-center justify-center gap-3 border-2 border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 cursor-pointer"
                     >
-                        <i className={`fas ${calculationResults.clusterEligibility[cluster.id]?.isEligible ? 'fa-magic' : 'fa-lock'} text-[0.8em]`}></i>
-                        {calculationResults.clusterEligibility[cluster.id]?.isEligible ? 'View My Courses' : 'Locked'}
+                        <i className="fas fa-magic text-[0.8em]"></i>
+                        View My Courses
                     </button>
-                    {!calculationResults.clusterEligibility[cluster.id]?.isEligible && (
-                      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-800 rounded-lg p-3">
-                        <p className="text-[9px] font-bold text-amber-700 dark:text-amber-300">
-                          🔒 Missing: {calculationResults.clusterEligibility[cluster.id]?.missingSubjectNames.join(', ')}
-                        </p>
-                      </div>
-                    )}
+
                   </div>
                   
                   <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-500"></div>

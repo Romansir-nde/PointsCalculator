@@ -109,72 +109,21 @@ export const calculateWeightedClusterPoints = (
     isEligible = false;
     weightedClusterPoints = 0;
   } else {
-    // PERFORMANCE INDEX STANDARDIZATION
-    // Formula: C = [√((r/R) × (t/T))] × 48 × Performance Index
-    // Performance Index ranges from 0.85 to 0.98 to prevent perfect scores
-    
-    // Calculate raw formula result
+    // Calculate raw formula result using official KUCCPS formula
+    // C = [√((r/R) × (t/T))] × 48
     const ratio = (sumR / R) * (totalPoints / T);
     const sqrtRatio = Math.sqrt(ratio);
-    const rawPoints = sqrtRatio * 48;
-    
-    // Calculate Performance Index based on KCSE 2025 data distribution
-    // Performance Index prevents standardization issues and perfect scores
-    // Uses bell curve approach - most students cluster around 35-40 points
-    const performanceIndex = calculatePerformanceIndex(totalPoints, sumR);
-    
-    // Apply standardization: no student can exceed 97% of theoretical max
-    weightedClusterPoints = rawPoints * performanceIndex;
-    
-    // KCSE 2025 DATABASE REGULATION - Still apply caps for realism
-    const realWorldCaps: Record<number, number> = {
-      // Highly competitive clusters (Medicine, Engineering, Law) - max 42 (not 48)
-      1: 42,   // Law & Related
-      7: 42,   // Engineering & Technology
-      9: 41,   // Computing, IT & Related
-      15: 42,  // Medicine, Nursing & Health
-      11: 41,  // Science & Related
-      
-      // Very Competitive clusters - max 41
-      2: 41,   // Business & Related
-      4: 40,   // GeoScience & Related
-      12: 41,  // Mathematics, Economics & Related
-      
-      // Competitive clusters - max 40
-      3: 40,   // Arts & Related
-      6: 39,   // Kiswahili & Related
-      8: 40,   // Architecture, Design & Planning
-      
-      // Moderately Competitive clusters - max 39
-      5: 38,   // Special Education
-      10: 39,  // Agribusiness & Related
-      13: 38,  // Design, Textiles & Related
-      14: 38,  // Sports & Physical Education
-      16: 37,  // History & Related
-      17: 38,  // Agriculture, Food Science & Env
-      18: 38,  // Geography & Natural Resources
-      19: 39,  // Education Science & Arts
-      20: 36,  // Religious Studies & Related
-      21: 36,  // French & Related
-      22: 36,  // German & Related
-      23: 36,  // Music & Related
-    };
-    
-    const maxPointsForCluster = realWorldCaps[clusterId] || 39;
-    
-    if (weightedClusterPoints > maxPointsForCluster) {
-      weightedClusterPoints = maxPointsForCluster;
-    }
+    weightedClusterPoints = sqrtRatio * 48;
   }
 
-  // Determine competitiveness based on 2025 KCSE realistic performance data
+  // Determine competitiveness based on actual calculated points
   let competitiveness: 'Highly Competitive' | 'Competitive' | 'Moderately Competitive' | 'Not Eligible' = 'Not Eligible';
   
-  if (weightedClusterPoints >= 42) {
+  if (weightedClusterPoints >= 40) {
     competitiveness = 'Highly Competitive';
-  } else if (weightedClusterPoints >= 38) {
+  } else if (weightedClusterPoints >= 35) {
     competitiveness = 'Competitive';
-  } else if (weightedClusterPoints >= 30) {
+  } else if (weightedClusterPoints >= 25) {
     competitiveness = 'Moderately Competitive';
   } else {
     isEligible = false;
@@ -198,56 +147,6 @@ export const calculateWeightedClusterPoints = (
   };
 };
 
-// PERFORMANCE INDEX CALCULATION - Standardization curve to prevent perfect scores
-// Based on KCSE 2025 performance distribution - ensures realistic score spread
-const calculatePerformanceIndex = (totalPoints: number, sumR: number): number => {
-  // Performance index ranges from 0.85 (perfect student) to 0.98 (average student)
-  // This ensures even perfect scores (84/84 KCSE + 48/48 cluster) never reach 48
-  // Bell curve approach: most students get 0.90-0.95 index
-  
-  // Calculate performance ratio (0 to 1)
-  const performanceRatio = totalPoints / 84;
-  const clusterRatio = sumR / 48;
-  
-  // Combined performance metric (0 to 2, typically 0.5 to 1.5)
-  const combinedPerformance = (performanceRatio + clusterRatio) / 2;
-  
-  // Performance index curve (prevents extreme values)
-  // High performers get slightly lower index to prevent perfect scores
-  // Average performers get moderate index
-  // Low performers get higher index (already have lower points from formula)
-  
-  let performanceIndex: number;
-  
-  if (combinedPerformance >= 0.95) {
-    // Exceptional students (mostly A's and A+s) - heavily standardized
-    // Formula: linear decrease from 0.87 to 0.92 for top performers
-    performanceIndex = 0.92 - (combinedPerformance - 0.95) * 0.5;
-  } else if (combinedPerformance >= 0.80) {
-    // Strong students (mostly B+ and A-) - moderate standardization
-    // Formula: 0.88 to 0.92
-    performanceIndex = 0.88 + (combinedPerformance - 0.80) * 0.4;
-  } else if (combinedPerformance >= 0.65) {
-    // Solid students (B and B-) - mild standardization
-    // Formula: 0.85 to 0.88
-    performanceIndex = 0.85 + (combinedPerformance - 0.65) * 0.15;
-  } else if (combinedPerformance >= 0.50) {
-    // Average students (C+ and C) - minimal standardization
-    // Formula: 0.83 to 0.85
-    performanceIndex = 0.83 + (combinedPerformance - 0.50) * 0.04;
-  } else {
-    // Below average students (C- and below) - no standardization penalty
-    performanceIndex = 0.83;
-  }
-  
-  // Ensure index stays within reasonable bounds
-  // Minimum 0.82 (prevents any student from achieving 48 points)
-  // Maximum 0.95 (even perfect students get standardized)
-  performanceIndex = Math.max(0.82, Math.min(0.95, performanceIndex));
-  
-  return performanceIndex;
-};
-
 /**
  * Calculate all clusters and return sorted by competitiveness
  */
@@ -268,7 +167,7 @@ export const getEligibilityMessage = (calculation: ClusterCalculation): string =
       return `🔒 NOT ELIGIBLE - MISSING REQUIRED SUBJECTS\n\n❌ You are ineligible for ${calculation.clusterName} because you did not enter scores for the following required subjects:\n\n${calculation.missingSubjectNames.map((s, i) => `  ${i + 1}. ${s}`).join('\n')}\n\nThese are CORE requirements for this cluster. You MUST have grades in all required subject areas to qualify.\n\nRecommendation: Choose a different cluster that matches your subject choices, or contact your school about adding these subjects.`;
     }
 
-    return `❌ NOT ELIGIBLE\n\nYour cluster weight of ${calculation.weightedClusterPoints.toFixed(2)} points is below the minimum requirement for ${calculation.clusterName}.\n\nMinimum typical requirement: 30+ points\nYour score: ${calculation.weightedClusterPoints.toFixed(2)} points\n\nConsider exploring other clusters or seeking academic guidance.`;
+    return `❌ NOT ELIGIBLE\n\nYour cluster weight of ${calculation.weightedClusterPoints.toFixed(2)} points is below the minimum requirement for ${calculation.clusterName}.\n\nMinimum typical requirement: 25+ points\nYour score: ${calculation.weightedClusterPoints.toFixed(2)} points\n\nConsider exploring other clusters or seeking academic guidance.`;
   }
 
   if (calculation.competitiveness === 'Highly Competitive') {

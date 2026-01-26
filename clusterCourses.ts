@@ -34,22 +34,113 @@ const course = (name: string, unis: string[]): CourseEntry => ({
 
 export const CLUSTER_COURSES: Record<number, CourseEntry[]> = {
   1: [
-    course('Bachelor of Laws (LL.B)', ['University of Nairobi', 'Kenyatta University', 'Moi University', 'JKUAT']),
-    course('Bachelor of Laws (Honours)', ['University of Nairobi', 'Moi University', 'Egerton University']),
-    course('Diploma in Paralegal Studies', ['Kenyatta University', 'Technical University of Kenya', 'Maseno University', 'Kisii University']),
-    course('Bachelor of Arts (Political Science)', ['University of Nairobi', 'Egerton University', 'Moi University', 'Kenyatta University']),
-    course('Bachelor of Commerce (Corporate Law)', ['JKUAT', 'Kenyatta University', 'University of Nairobi']),
-    course('Bachelor of Arts (Sociology and Criminology)', ['Moi University', 'University of Nairobi', 'Maseno University']),
-    course('Diploma in Human Rights and Governance', ['Kisii University', 'Technical University of Kenya', 'Maseno University']),
-    course('Certificate in Litigation Support', ['Technical University of Kenya', 'Kisii University', 'Kenya Institute of Legal Studies']),
-    course('Diploma in Public Administration', ['Maseno University', 'University of Eldoret', 'Technical University of Mombasa']),
-    course('Bachelor of Arts (Public Law)', ['University of Nairobi', 'Kenyatta University', 'Moi University']),
-    course('Diploma in Legal Technology', ['Technical University of Kenya', 'Nairobi Institute of Business Studies', 'Maseno University']),
-    course('Bachelor of Arts (International Relations)', ['University of Nairobi', 'Kenyatta University', 'Egerton University']),
-    course('Certificate in Immigration Law', ['Nairobi Institute of Business Studies', 'Technical University of Kenya', 'Kenya Institute of Legal Studies']),
-    course('Diploma in Dispute Resolution', ['Maseno University', 'Kisii University', 'Technical University of Mombasa']),
-    course('Bachelor of Arts (Labour Law and Industrial Relations)', ['University of Nairobi', 'Moi University', 'JKUAT'])
+    course('Bachelor of Science (Computer Science)', ['University of Nairobi', 'JKUAT', 'Kenyatta University', 'Moi University']),
+    course('Bachelor of Science (Mathematics)', ['University of Nairobi', 'Moi University', 'Kenyatta University']),
+    course('Diploma in Information Technology', ['Technical University of Kenya', 'Maseno University', 'Kisii University']),
+    course('Bachelor of Science (Software Engineering)', ['JKUAT', 'University of Nairobi', 'Kenyatta University']),
+    course('Diploma in Computer Studies', ['Technical University of Kenya', 'Maseno University', 'Kisii University'])
   ],
+  2: [
+    course('Bachelor of Science (Physics)', ['University of Nairobi', 'Moi University', 'Kenyatta University']),
+    course('Bachelor of Science (Chemistry)', ['University of Nairobi', 'Moi University', 'Egerton University']),
+    course('Diploma in Laboratory Technology', ['Technical University of Kenya', 'Maseno University', 'Kisii University']),
+    course('Bachelor of Science (Applied Physics)', ['JKUAT', 'University of Nairobi', 'Moi University'])
+  ],
+  3: [
+    course('Bachelor of Science (Biology)', ['University of Nairobi', 'Moi University', 'Kenyatta University']),
+    course('Bachelor of Science (Biochemistry)', ['University of Nairobi', 'Moi University', 'JKUAT']),
+    course('Bachelor of Science (Microbiology)', ['University of Nairobi', 'JKUAT', 'Kenyatta University']),
+    course('Diploma in Medical Laboratory Science', ['Technical University of Kenya', 'Maseno University'])
+  ],
+  4: [
+    course('Bachelor of Technology (Mechanical Engineering)', ['JKUAT', 'Technical University of Kenya', 'Moi University']),
+    course('Bachelor of Technology (Electrical Engineering)', ['JKUAT', 'Technical University of Kenya', 'Moi University']),
+    course('Diploma in Mechanical Engineering', ['Technical University of Kenya', 'Maseno University', 'Kisii University'])
+  ],
+  5: [
+    course('Bachelor of Commerce', ['University of Nairobi', 'Kenyatta University', 'Moi University', 'JKUAT']),
+    course('Bachelor of Business Management', ['Egerton University', 'Maseno University', 'JKUAT']),
+    course('Diploma in Business Administration', ['Technical University of Kenya', 'Kisii University', 'Maseno University']),
+    course('Bachelor of Commerce (Finance)', ['JKUAT', 'University of Nairobi', 'Kenyatta University'])
+  ],
+  6: [
+    course('Bachelor of Arts (English)', ['University of Nairobi', 'Moi University', 'Kenyatta University']),
+    course('Bachelor of Arts (History)', ['Egerton University', 'Maseno University', 'Kenyatta University']),
+    course('Bachelor of Arts (Sociology)', ['University of Nairobi', 'Moi University', 'Egerton University']),
+    course('Diploma in Social Work', ['Maseno University', 'Kisii University', 'Technical University of Kenya'])
+  ],
+  7: [
+    course('Bachelor of Science (Agriculture)', ['Egerton University', 'University of Nairobi', 'Maseno University']),
+    course('Bachelor of Science (Horticulture)', ['Egerton University', 'JKUAT', 'Maseno University']),
+    course('Diploma in Agriculture', ['Egerton University', 'Maseno University', 'Technical University of Kenya'])
+  ],
+  8: [
+    course('Bachelor of Medicine & Surgery (MBChB)', ['University of Nairobi', 'Moi University', 'Kenyatta University', 'JKUAT']),
+    course('Bachelor of Nursing Science', ['University of Nairobi', 'Kenyatta University', 'Moi University']),
+    course('Bachelor of Pharmacy', ['University of Nairobi', 'JKUAT', 'Moi University']),
+    course('Diploma in Clinical Medicine', ['Kenya Medical Training College', 'Technical University of Kenya'])
+  ],
+  9: [
+    course('Bachelor of Engineering (Civil)', ['University of Nairobi', 'JKUAT', 'Moi University']),
+    course('Bachelor of Engineering (Mechanical)', ['JKUAT', 'University of Nairobi', 'Moi University']),
+    course('Bachelor of Engineering (Electrical)', ['JKUAT', 'University of Nairobi', 'Moi University']),
+    course('Diploma in Civil Engineering', ['Technical University of Kenya', 'Maseno University'])
+  ],
+  10: [
+    course('Bachelor of Architecture', ['JKUAT', 'University of Nairobi', 'Kenyatta University']),
+    course('Bachelor of Science (Construction Management)', ['JKUAT', 'University of Nairobi', 'Moi University']),
+    course('Diploma in Architectural Technology', ['Technical University of Kenya', 'Maseno University'])
+  ],
+  11: [
+    course('Bachelor of Education (Science)', ['University of Nairobi', 'Moi University', 'Kenyatta University']),
+    course('Bachelor of Education (Mathematics)', ['Kenyatta University', 'Moi University', 'Egerton University']),
+    course('Diploma in Education (Science)', ['Maseno University', 'Technical University of Kenya'])
+  ],
+  12: [
+    course('Bachelor of Education (Arts)', ['University of Nairobi', 'Kenyatta University', 'Moi University']),
+    course('Bachelor of Education (Languages)', ['Kenyatta University', 'Moi University', 'Egerton University']),
+    course('Diploma in Education (Arts)', ['Maseno University', 'Kisii University'])
+  ],
+  13: [
+    course('Bachelor of Fine Arts', ['University of Nairobi', 'Kenyatta University', 'JKUAT']),
+    course('Bachelor of Design (Graphics)', ['University of Nairobi', 'Kenyatta University', 'JKUAT']),
+    course('Diploma in Fine Arts', ['Technical University of Kenya', 'Maseno University'])
+  ],
+  14: [
+    course('Bachelor of Arts (English)', ['University of Nairobi', 'Moi University', 'Kenyatta University']),
+    course('Bachelor of Arts (Kiswahili)', ['University of Nairobi', 'Moi University', 'Kenyatta University']),
+    course('Bachelor of Arts (French)', ['University of Nairobi', 'Moi University', 'Kenyatta University'])
+  ],
+  15: [
+    course('Bachelor of Arts (Mass Communication)', ['University of Nairobi', 'JKUAT', 'Moi University']),
+    course('Bachelor of Arts (Journalism)', ['University of Nairobi', 'Moi University', 'Kenyatta University']),
+    course('Diploma in Journalism', ['Technical University of Kenya', 'Maseno University'])
+  ],
+  16: [
+    course('Bachelor of Economics', ['University of Nairobi', 'Moi University', 'Kenyatta University']),
+    course('Bachelor of Science (Economics)', ['JKUAT', 'University of Nairobi', 'Moi University']),
+    course('Diploma in Economics', ['Technical University of Kenya', 'Maseno University'])
+  ],
+  17: [
+    course('Bachelor of Laws (LL.B)', ['University of Nairobi', 'Kenyatta University', 'Moi University', 'JKUAT']),
+    course('Diploma in Law', ['Technical University of Kenya', 'Maseno University'])
+  ],
+  18: [
+    course('Bachelor of Science (Geography)', ['University of Nairobi', 'Moi University', 'Kenyatta University']),
+    course('Bachelor of Science (Environmental Science)', ['University of Nairobi', 'Moi University', 'Egerton University']),
+    course('Diploma in Environmental Studies', ['Technical University of Kenya', 'Maseno University'])
+  ],
+  19: [
+    course('Bachelor of Science (Home Economics)', ['Kenyatta University', 'Egerton University', 'Moi University']),
+    course('Bachelor of Science (Food Science)', ['University of Nairobi', 'JKUAT', 'Egerton University']),
+    course('Diploma in Hotel Management', ['Technical University of Kenya', 'Maseno University'])
+  ],
+  20: [
+    course('Bachelor of Music', ['University of Nairobi', 'Moi University', 'Kenyatta University']),
+    course('Bachelor of Arts (Music)', ['Kenyatta University', 'Moi University', 'Egerton University']),
+    course('Diploma in Music', ['Technical University of Kenya', 'Maseno University'])
+  ]
+};
   2: [
     { course: 'Bachelor of Commerce', universities: ['University of Nairobi', 'Kenyatta University', 'Moi University', 'JKUAT', 'Egerton University'] },
     { course: 'Bachelor of Business Management', universities: ['Egerton University', 'Maseno University', 'JKUAT', 'Kenyatta University'] },
