@@ -7,7 +7,7 @@ const router = express.Router();
 const checkAdminAuth = (req: any, res: any, next: any) => {
   const { adminuser, adminpass } = req.headers;
   const envUser = process.env.ADMIN_USER || 'ADMIN';
-  const envPass = process.env.ADMIN_PASS || '2030';
+  const envPass = process.env.ADMIN_PASS || '2007';
   
   if (adminuser === envUser && adminpass === envPass) {
     next();

@@ -22,7 +22,7 @@ const App: React.FC = () => {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [adminAuth, setAdminAuth] = useState({ user: '', pass: '', loggedIn: false });
   const [stats, setStats] = useState({ totalCalculations: 0 });
-  const [currentRequiredPasskey, setCurrentRequiredPasskey] = useState('2030');
+  const [currentRequiredPasskey, setCurrentRequiredPasskey] = useState('2007');
   const [newPasskeyInput, setNewPasskeyInput] = useState('');
 
   // Modal states for AI
@@ -100,11 +100,11 @@ const App: React.FC = () => {
     const inputCode = transactionCode.trim();
     setAuthError(null);
     
-    // Constant passkey 2030 - always valid, no usage restrictions
+    // Constant passkey 2007 - always valid, no usage restrictions
     setIsProcessing(true);
 
     setTimeout(() => {
-      const isPasskeyMatch = inputCode === '2030';
+      const isPasskeyMatch = inputCode === '2007';
 
       if (isPasskeyMatch) {
         updateStats();
@@ -125,8 +125,8 @@ const App: React.FC = () => {
   };
 
   const generateNextAdminKey = () => {
-    // Passkey is constant at 2030 - no changes needed
-    alert(`✅ PASSKEY CONFIGURATION\n\n🔐 Current Passkey: 2030\n\nThis is the CONSTANT passkey for all users and devices.\n\nIt will NEVER change automatically.\n\nTo change it, use the "Change Passkey" input field below.`);
+    // Passkey is constant at 2007 - no changes needed
+    alert(`✅ PASSKEY CONFIGURATION\n\n🔐 Current Passkey: 2007\n\nThis is the CONSTANT passkey for all users and devices.\n\nIt will NEVER change automatically.\n\nTo change it, use the "Change Passkey" input field below.`);
   };
 
   const resetForNew = () => {
@@ -137,7 +137,7 @@ const App: React.FC = () => {
   };
 
   const handleAdminLogin = () => {
-    if (adminAuth.user === 'ADMIN' && adminAuth.pass === '2030') {
+    if (adminAuth.user === 'ADMIN' && adminAuth.pass === '2007') {
       setAdminAuth(prev => ({ ...prev, loggedIn: true }));
     } else {
       alert("Invalid Admin Credentials");
@@ -145,10 +145,10 @@ const App: React.FC = () => {
   };
 
   const resetPasskeySequence = () => {
-    if (confirm("🔐 Passkey is CONSTANT at 2030.\n\nIt will work for unlimited users and devices.\n\nNo reset needed - everyone uses: 2030")) {
-      localStorage.setItem('current_passkey', '2030');
-      setCurrentRequiredPasskey('2030');
-      alert("✅ Confirmed: Passkey is 2030 (constant for all devices)");
+    if (confirm("🔐 Passkey is CONSTANT at 2007.\n\nIt will work for unlimited users and devices.\n\nNo reset needed - everyone uses: 2007")) {
+      localStorage.setItem('current_passkey', '2007');
+      setCurrentRequiredPasskey('2007');
+      alert("✅ Confirmed: Passkey is 2007 (constant for all devices)");
     }
   };
 
@@ -274,7 +274,20 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className={`${isDarkMode ? 'dark bg-slate-900 text-white' : 'bg-gray-50 text-slate-900'} min-h-screen pb-12 transition-colors flex flex-col`}>
+    <div className={`${isDarkMode ? 'dark bg-slate-900 text-white' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-green-50 text-slate-900'} min-h-screen pb-12 transition-colors flex flex-col relative`}
+    style={{
+      backgroundImage: !isDarkMode ? `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 40 0 L 0 0 0 40' fill='none' stroke='rgba(0,0,0,0.03)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23grid)'/%3E%3C/svg%3E")` : undefined,
+      backgroundAttachment: 'fixed'
+    }}>
+      {/* Decorative elements for graduate forum theme */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-10 left-10 w-72 h-72 bg-green-200 dark:bg-green-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+        <div className="absolute top-40 right-10 w-72 h-72 bg-blue-200 dark:bg-blue-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-yellow-200 dark:bg-yellow-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '4s'}}></div>
+      </div>
+
+      {/* Graduation forum banner */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-600 via-blue-600 to-green-600"></div>
       <nav className="sticky top-0 z-50 bg-white dark:bg-slate-800 p-4 shadow-sm flex justify-between items-center border-b border-gray-100 dark:border-slate-700">
         <div className="flex items-center gap-2">
           <div className="bg-green-600 text-white p-2 rounded-lg"><i className="fas fa-bolt"></i></div>
@@ -285,7 +298,7 @@ const App: React.FC = () => {
         </button>
       </nav>
 
-      <main className="max-w-4xl mx-auto w-full px-4 mt-8 flex-1">
+      <main className="max-w-4xl mx-auto w-full px-4 mt-8 flex-1 relative z-10">
         {step === AppStep.Input && (
           <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] p-8 shadow-xl border border-slate-100 dark:border-slate-700 space-y-8">
             <h2 className="text-3xl font-black uppercase tracking-tight">Grade Entry</h2>
