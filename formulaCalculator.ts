@@ -4,6 +4,9 @@ import { CLUSTERS, SUBJECTS } from './constants';
  * KUCCPS Weighted Cluster Points Formula
  * C = [√((r/R) × (t/T))] × 48
  * 
+ * ALL CLUSTERS ARE PERMANENTLY ACCESSIBLE TO STUDENTS
+ * No restrictions based on missing subjects or low points
+ * 
  * Where:
  * r = Sum of points from your four relevant cluster subjects
  * R = Maximum possible points from those four subjects (12 × 4 = 48)
@@ -21,11 +24,11 @@ export interface ClusterCalculation {
   maxR: number; // R - max possible (48)
   totalPoints: number; // t - total KCSE points
   maxTotal: number; // T - max possible (84)
-  isEligible: boolean;
+  isEligible: boolean; // Always true - all clusters accessible
   weightedClusterPoints: number;
   competitiveness: 'Highly Competitive' | 'Competitive' | 'Moderately Competitive' | 'Not Eligible';
-  missingRequiredSubjects: string[]; // Subjects not entered from core requirements
-  missingSubjectNames: string[]; // Human-readable names of missing subjects
+  missingRequiredSubjects: string[]; // For information only - doesn't block access
+  missingSubjectNames: string[]; // For information only - doesn't block access
 }
 
 /**
@@ -96,24 +99,23 @@ export const calculateWeightedClusterPoints = (
     }
   }
 
-  // Calculate cluster weighted points with PERFORMANCE INDEX STANDARDIZATION
-  // This ensures no student gets perfect 48 points and applies realistic standardization
+  // Calculate cluster weighted points - always calculate regardless of missing subjects
   const R = 48; // Maximum possible points from 4 cluster subjects
   const T = 84; // Maximum total KCSE points (7 subjects × 12)
   
   let weightedClusterPoints = 0;
-  let isEligible = true;
+  let isEligible = true; // Always eligible - all clusters accessible
 
-  // Only ineligible if CORE subjects are missing or score is below threshold
-  if (missingSubjectNames.length > 0 || sumR === 0 || totalPoints === 0) {
-    isEligible = true; // Changed to true - allow all clusters
-    weightedClusterPoints = 0;
-  } else {
+  // Calculate points even if some subjects are missing
+  if (sumR > 0 && totalPoints > 0) {
     // Calculate raw formula result using official KUCCPS formula
     // C = [√((r/R) × (t/T))] × 48
     const ratio = (sumR / R) * (totalPoints / T);
     const sqrtRatio = Math.sqrt(ratio);
     weightedClusterPoints = sqrtRatio * 48;
+  } else {
+    // Even with 0 points, keep cluster accessible
+    weightedClusterPoints = 0;
   }
 
   // Determine competitiveness based on actual calculated points
