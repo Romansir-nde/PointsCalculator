@@ -26,7 +26,7 @@ export interface ClusterCalculation {
   maxTotal: number; // T - max possible (84)
   isEligible: boolean; // Always true - all clusters accessible
   weightedClusterPoints: number;
-  competitiveness: 'Highly Competitive' | 'Competitive' | 'Moderately Competitive' | 'Not Eligible';
+  competitiveness: 'Highly Competitive' | 'Competitive' | 'Moderately Competitive';
   missingRequiredSubjects: string[]; // For information only - doesn't block access
   missingSubjectNames: string[]; // For information only - doesn't block access
 }
@@ -119,7 +119,7 @@ export const calculateWeightedClusterPoints = (
   }
 
   // Determine competitiveness based on actual calculated points
-  let competitiveness: 'Highly Competitive' | 'Competitive' | 'Moderately Competitive' | 'Not Eligible' = 'Moderately Competitive';
+  let competitiveness: 'Highly Competitive' | 'Competitive' | 'Moderately Competitive' = 'Moderately Competitive';
   
   if (weightedClusterPoints >= 40) {
     competitiveness = 'Highly Competitive';
