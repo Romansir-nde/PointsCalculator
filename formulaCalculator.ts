@@ -49,9 +49,9 @@ export const calculateWeightedClusterPoints = (
       maxR: 48,
       totalPoints: 0,
       maxTotal: 84,
-      isEligible: false,
+      isEligible: true,
       weightedClusterPoints: 0,
-      competitiveness: 'Not Eligible',
+      competitiveness: 'Moderately Competitive',
       missingRequiredSubjects: [],
       missingSubjectNames: [],
     };
@@ -156,19 +156,9 @@ export const calculateAllClusters = (selectedGrades: Record<string, number>): Cl
 };
 
 /**
- * Get user-friendly eligibility message
+ * Get user-friendly eligibility message - ALL CLUSTERS ALWAYS ACCESSIBLE
  */
 export const getEligibilityMessage = (calculation: ClusterCalculation): string => {
-  if (!calculation.isEligible) {
-    // Check if missing required subjects
-    if (calculation.missingSubjectNames.length > 0) {
-      const missingList = calculation.missingSubjectNames.join(', ');
-      return `🔒 NOT ELIGIBLE - MISSING REQUIRED SUBJECTS\n\n❌ You are ineligible for ${calculation.clusterName} because you did not enter scores for the following required subjects:\n\n${calculation.missingSubjectNames.map((s, i) => `  ${i + 1}. ${s}`).join('\n')}\n\nThese are CORE requirements for this cluster. You MUST have grades in all required subject areas to qualify.\n\nRecommendation: Choose a different cluster that matches your subject choices, or contact your school about adding these subjects.`;
-    }
-
-    return `❌ NOT ELIGIBLE\n\nYour cluster weight of ${calculation.weightedClusterPoints.toFixed(2)} points is below the minimum requirement for ${calculation.clusterName}.\n\nMinimum typical requirement: 25+ points\nYour score: ${calculation.weightedClusterPoints.toFixed(2)} points\n\nConsider exploring other clusters or seeking academic guidance.`;
-  }
-
   if (calculation.competitiveness === 'Highly Competitive') {
     return `✅ HIGHLY COMPETITIVE (${calculation.weightedClusterPoints.toFixed(2)} pts)\n\nExcellent standing! You are well-positioned for top-tier institutions and popular programmes in this cluster.`;
   }
@@ -177,11 +167,7 @@ export const getEligibilityMessage = (calculation: ClusterCalculation): string =
     return `✅ COMPETITIVE (${calculation.weightedClusterPoints.toFixed(2)} pts)\n\nGood standing! You should have good placement prospects at most institutions offering this cluster.`;
   }
 
-  if (calculation.competitiveness === 'Moderately Competitive') {
-    return `⚠️ MODERATELY COMPETITIVE (${calculation.weightedClusterPoints.toFixed(2)} pts)\n\nYou qualify but have moderate competitiveness. Focus on institutions with slightly lower cutoffs or consider alternative clusters.`;
-  }
-
-  return `❌ NOT ELIGIBLE (${calculation.weightedClusterPoints.toFixed(2)} pts)\n\nUnfortunately, you don't meet the minimum requirements for this cluster.`;
+  return `⚠️ ACCESSIBLE (${calculation.weightedClusterPoints.toFixed(2)} pts)\n\nThis cluster is accessible to you. Review the course listings and university cutoffs to find suitable programmes.`;
 };
 
 export default calculateWeightedClusterPoints;
