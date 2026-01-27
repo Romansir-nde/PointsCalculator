@@ -234,13 +234,16 @@ Guidelines:
       </div>
       {/* Professional gradient banner */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
-      <nav className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-4 shadow-lg flex justify-between items-center border-b border-blue-200 dark:border-blue-800">
+      <nav className="sticky top-0 z-50 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-4 shadow-2xl flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-2.5 rounded-xl shadow-lg"><i className="fas fa-graduation-cap font-bold text-lg"></i></div>
-          <h1 className="text-2xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">KUCCPS<span className="text-indigo-600 font-black">PRO</span></h1>
+          <div className="bg-white text-blue-600 p-3 rounded-xl shadow-lg animate-pulse"><i className="fas fa-graduation-cap font-bold text-2xl"></i></div>
+          <div>
+            <h1 className="text-2xl font-black tracking-tight text-white">KUCCPS<span className="text-yellow-300">PRO</span></h1>
+            <p className="text-[8px] text-blue-100 uppercase tracking-widest">Official 2025 Calculator</p>
+          </div>
         </div>
-        <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 w-10 h-10 rounded-full bg-blue-50 dark:bg-slate-700 flex items-center justify-center transition-transform active:scale-90 hover:bg-blue-100 dark:hover:bg-slate-600">
-          <i className={`fas ${isDarkMode ? 'fa-sun text-yellow-400' : 'fa-moon text-blue-600'}`}></i>
+        <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-3 w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-white/30 active:scale-90">
+          <i className={`fas ${isDarkMode ? 'fa-sun text-yellow-300' : 'fa-moon text-white'} text-lg`}></i>
         </button>
       </nav>
 
@@ -335,46 +338,62 @@ Guidelines:
 
         {step === AppStep.Results && (
           <div className="space-y-8 animate-in zoom-in-95">
-            <div className="bg-gradient-to-r from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 rounded-[2.5rem] p-10 shadow-xl border-t-[12px] border-blue-500 flex flex-col md:flex-row justify-between items-center">
-              <div>
-                <p className="text-[10px] font-black text-blue-600 dark:text-blue-300 uppercase tracking-widest">Mean Grade</p>
-                <h2 className="text-8xl font-black text-blue-600 dark:text-blue-400 tracking-tighter">{calculationResults.meanGrade}</h2>
+            <div className="bg-gradient-to-r from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 rounded-[2.5rem] p-10 shadow-2xl border-2 border-blue-500 flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="flex-1">
+                <div className="inline-block bg-blue-500/10 px-4 py-1 rounded-full mb-3">
+                  <p className="text-[10px] font-black text-blue-600 dark:text-blue-300 uppercase tracking-widest">Mean Grade</p>
+                </div>
+                <h2 className="text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 tracking-tighter">{calculationResults.meanGrade}</h2>
               </div>
-              <div className="text-right">
-                <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-300 uppercase tracking-widest">Total Points</p>
-                <h2 className="text-8xl font-black text-indigo-600 dark:text-indigo-400 tracking-tighter">{calculationResults.totalPoints}</h2>
+              <div className="h-20 w-px bg-gradient-to-b from-transparent via-blue-300 to-transparent hidden md:block"></div>
+              <div className="flex-1 text-right">
+                <div className="inline-block bg-indigo-500/10 px-4 py-1 rounded-full mb-3">
+                  <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-300 uppercase tracking-widest">Total Points</p>
+                </div>
+                <h2 className="text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 tracking-tighter">{calculationResults.totalPoints}</h2>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {CLUSTERS.map(cluster => (
-                <div key={cluster.id} className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-blue-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-600 shadow-lg hover:shadow-xl flex flex-col justify-between items-stretch transition-all group relative overflow-hidden">
-                  <div className="mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <h3 className="font-black text-[10px] uppercase text-slate-400 tracking-widest">{cluster.name}</h3>
+                <div key={cluster.id} className="bg-gradient-to-br from-white to-blue-50/50 dark:from-slate-800 dark:to-slate-900 p-8 rounded-3xl border-2 border-blue-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-2xl shadow-lg flex flex-col justify-between items-stretch transition-all duration-300 group relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-500"></div>
+                  
+                  <div className="mb-6 relative z-10">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full animate-pulse"></div>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Cluster {cluster.id}</span>
+                      </div>
+                      <div className="px-3 py-1 bg-blue-500/10 rounded-full">
+                        <span className="text-[8px] font-black text-blue-600 dark:text-blue-400 uppercase">2025</span>
+                      </div>
                     </div>
+                    <h3 className="font-black text-xs uppercase text-slate-700 dark:text-slate-200 tracking-wide leading-tight mb-4">{cluster.name}</h3>
                     
-                    <div className="flex items-end gap-2">
-                        <p className="text-6xl font-black text-blue-600 dark:text-blue-400 tracking-tighter leading-none">
-                            {calculationResults.clusterWeights[cluster.id].toFixed(3)}
+                    <div className="flex items-baseline gap-3">
+                        <p className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 tracking-tighter leading-none">
+                            {calculationResults.clusterWeights[cluster.id].toFixed(2)}
                         </p>
-                        <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase mb-2">Weight</span>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase">Points</span>
+                          <span className="text-[8px] font-bold text-slate-400">/ 48</span>
+                        </div>
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
+                  <div className="space-y-3 relative z-10">
                     <button 
                         onClick={() => viewCourses(cluster)}
-                        className="w-full text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-md transition-all active:scale-[0.97] flex items-center justify-center gap-3 border-2 border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 cursor-pointer"
+                        className="w-full text-white py-4 rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 hover:shadow-xl"
                     >
-                        <i className="fas fa-magic text-[0.8em]"></i>
-                        View My Courses
+                        <i className="fas fa-sparkles text-sm"></i>
+                        <span>Explore Courses</span>
+                        <i className="fas fa-arrow-right text-sm"></i>
                     </button>
-
                   </div>
                   
-                  <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-500"></div>
+                  <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-full blur-2xl group-hover:scale-150 transition-all duration-500"></div>
                 </div>
               ))}
             </div>
@@ -419,22 +438,23 @@ Guidelines:
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 p-10 rounded-[3rem] border border-blue-200 dark:border-blue-700/50 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
-                <div className="space-y-4">
-                  <div className="inline-flex items-center gap-2 bg-blue-500/20 px-3 py-1 rounded-full border border-blue-500/30">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-                    <span className="text-[10px] font-black text-blue-600 dark:text-blue-300 uppercase tracking-widest">2025 Placement Cycle</span>
+              <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-10 rounded-[3rem] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+                <div className="space-y-4 text-white">
+                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                    <span className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse"></span>
+                    <span className="text-xs font-black uppercase tracking-widest">2025 Placement Cycle</span>
                   </div>
-                  <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Need to try a different scenario?</h3>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm max-w-md font-medium">
-                    You can recalculate as many times as you need within this session. Experiment with different subject combinations to see how your cluster weights change.
+                  <h3 className="text-3xl font-black uppercase tracking-tight">Try Different Scenarios</h3>
+                  <p className="text-blue-100 text-sm max-w-md font-medium">
+                    Experiment with different subject combinations to see how your cluster weights change and discover new opportunities.
                   </p>
                 </div>
                 <button 
                   onClick={resetForNew} 
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg active:scale-95 whitespace-nowrap"
+                  className="bg-white text-blue-600 px-12 py-6 rounded-2xl font-black text-sm uppercase tracking-wider hover:bg-yellow-300 hover:text-blue-900 transition-all shadow-2xl active:scale-95 whitespace-nowrap flex items-center gap-3"
                 >
-                  New Calculation
+                  <i className="fas fa-redo text-lg"></i>
+                  <span>New Calculation</span>
                 </button>
               </div>
             </div>
@@ -442,13 +462,17 @@ Guidelines:
         )}
       </main>
 
-      <footer className="mt-auto py-12 text-center border-t border-blue-200 dark:border-slate-800">
-        <button 
-          onClick={() => setIsAdminOpen(true)}
-          className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-        >
-          System Administration • Official KUCCPS 2025 Algorithm
-        </button>
+      <footer className="mt-auto py-8 text-center border-t border-blue-200 dark:border-slate-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800">
+        <div className="space-y-2">
+          <button 
+            onClick={() => setIsAdminOpen(true)}
+            className="text-xs font-black text-slate-500 dark:text-slate-500 uppercase tracking-widest hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-2 mx-auto"
+          >
+            <i className="fas fa-shield-alt"></i>
+            <span>System Administration</span>
+          </button>
+          <p className="text-[10px] text-slate-400 font-bold">Official KUCCPS 2025 Algorithm • Powered by KUCCPSPRO</p>
+        </div>
       </footer>
 
       {/* Admin Portal Modal */}
