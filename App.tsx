@@ -123,10 +123,7 @@ const App: React.FC = () => {
     const entries = CLUSTER_COURSES[clusterId] || [];
     const cutoffData = KUCCPS_2024_CUTOFFS[clusterId];
 
-    if (!clusterCalc.isEligible) {
-      return `${getEligibilityMessage(clusterCalc)}\n\n📊 Formula Breakdown:\n- Sum of cluster subjects (r): ${clusterCalc.sumR}/48\n- Your total points (t): ${clusterCalc.totalPoints}/84\n- Calculated points: ${clusterCalc.weightedClusterPoints}\n\nYou need at least 30 points to be considered for this cluster.`;
-    }
-
+    // Always show courses - removed eligibility check
     // Build university comparison
     let universityComparison = '';
     if (cutoffData) {
