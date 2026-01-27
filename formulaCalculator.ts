@@ -72,9 +72,7 @@ export const calculateWeightedClusterPoints = (
   // For each subject group in the cluster, take the highest scoring subject
   for (let i = 0; i < cluster.subjects.length; i++) {
     const subjectGroup = cluster.subjects[i];
-    const groupPoints = subjectGroup
-      .map(subjectId => selectedGrades[subjectId] || 0)
-      .sort((a, b) => b - a)[0]; // Get highest score in group
+    const groupPoints = Math.max(...subjectGroup.map(subjectId => selectedGrades[subjectId] || 0));
     
     if (groupPoints > 0) {
       sumR += groupPoints;
@@ -118,15 +116,16 @@ export const calculateWeightedClusterPoints = (
     weightedClusterPoints = 0;
   }
 
-  // Determine competitiveness based on actual calculated points
+  // Round before determining competitiveness for consistency
+  const roundedPoints = Math.round(weightedClusterPoints * 100) / 100;
+
+  // Determine competitiveness based on rounded points
   let competitiveness: 'Highly Competitive' | 'Competitive' | 'Moderately Competitive' = 'Moderately Competitive';
   
-  if (weightedClusterPoints >= 40) {
+  if (roundedPoints >= 40) {
     competitiveness = 'Highly Competitive';
-  } else if (weightedClusterPoints >= 35) {
+  } else if (roundedPoints >= 35) {
     competitiveness = 'Competitive';
-  } else if (weightedClusterPoints >= 0) {
-    competitiveness = 'Moderately Competitive';
   }
 
   return {
@@ -139,7 +138,7 @@ export const calculateWeightedClusterPoints = (
     totalPoints,
     maxTotal: T,
     isEligible,
-    weightedClusterPoints: Math.round(weightedClusterPoints * 100) / 100, // Round to 2 decimals
+    weightedClusterPoints: roundedPoints,
     competitiveness,
     missingRequiredSubjects,
     missingSubjectNames,

@@ -141,8 +141,8 @@ export const CLUSTER_COURSES: Record<number, CourseEntry[]> = {
     course('Diploma in Music', ['Technical University of Kenya', 'Maseno University'])
   ]
 };
-  2: [
-    { course: 'Bachelor of Commerce', universities: ['University of Nairobi', 'Kenyatta University', 'Moi University', 'JKUAT', 'Egerton University'] },
+
+export default CLUSTER_COURSES;
     { course: 'Bachelor of Business Management', universities: ['Egerton University', 'Maseno University', 'JKUAT', 'Kenyatta University'] },
     { course: 'Diploma in Business Administration', universities: ['Technical University of Kenya', 'Kisii University', 'Kenya Institute of Management', 'Maseno University'] },
     { course: 'Bachelor of Economics', universities: ['University of Nairobi', 'Moi University', 'Kenyatta University', 'JKUAT'] },

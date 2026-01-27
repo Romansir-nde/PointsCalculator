@@ -43,8 +43,8 @@ export const calculateMeanGradeData = (selectedGrades: Record<string, Grade>) =>
   const best5Others = pool.slice(0, 5);
   const totalPoints = mathPoints + bestLang + best5Others.reduce((a, b) => a + b, 0);
   
-  // Note: if less than 7 subjects provided, we still sum what is there
-  const meanPoints = totalPoints / 7;
+  const subjectCount = 1 + (bestLang > 0 ? 1 : 0) + best5Others.length;
+  const meanPoints = subjectCount > 0 ? totalPoints / subjectCount : 0;
   const meanGrade = getGradeFromPoints(meanPoints);
 
   return { meanGrade, totalPoints, meanPoints };

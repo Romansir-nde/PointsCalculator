@@ -21,17 +21,24 @@ const App: React.FC = () => {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [adminAuth, setAdminAuth] = useState({ user: '', pass: '', loggedIn: false });
   const [stats, setStats] = useState({ totalCalculations: 0 });
-  const currentRequiredPasskey = '2007';
+  const currentRequiredPasskey = process.env.PASSKEY || '2007';
 
   // Modal states for AI
   const [showCourseModal, setShowCourseModal] = useState(false);
-  const [activeCluster, setActiveCluster] = useState<any>(null);
+  const [activeCluster, setActiveCluster] = useState<typeof CLUSTERS[number] | null>(null);
   const [generatedCourses, setGeneratedCourses] = useState<string>('');
   const [isGeneratingCourses, setIsGeneratingCourses] = useState(false);
 
   useEffect(() => {
-    const savedStats = localStorage.getItem('app_stats');
-    if (savedStats) setStats(JSON.parse(savedStats));
+    try {
+      const savedStats = localStorage.getItem('app_stats');
+      if (savedStats) {
+        setStats(JSON.parse(savedStats));
+      }
+    } catch (error) {
+      console.error('Failed to load stats from localStorage:', error);
+      setStats({ totalCalculations: 0 });
+    }
   }, []);
 
   const updateStats = () => {
@@ -104,7 +111,10 @@ const App: React.FC = () => {
   };
 
   const handleAdminLogin = () => {
-    if (adminAuth.user === 'ADMIN' && adminAuth.pass === '2025') {
+    const validUser = process.env.ADMIN_USER || 'ADMIN';
+    const validPass = process.env.ADMIN_PASS || '2025';
+    
+    if (adminAuth.user === validUser && adminAuth.pass === validPass) {
       setAdminAuth(prev => ({ ...prev, loggedIn: true }));
     } else {
       alert("Invalid Admin Credentials");
