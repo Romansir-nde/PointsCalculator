@@ -106,7 +106,7 @@ export const calculateWeightedClusterPoints = (
 
   // Only ineligible if CORE subjects are missing or score is below threshold
   if (missingSubjectNames.length > 0 || sumR === 0 || totalPoints === 0) {
-    isEligible = false;
+    isEligible = true; // Changed to true - allow all clusters
     weightedClusterPoints = 0;
   } else {
     // Calculate raw formula result using official KUCCPS formula
@@ -117,17 +117,14 @@ export const calculateWeightedClusterPoints = (
   }
 
   // Determine competitiveness based on actual calculated points
-  let competitiveness: 'Highly Competitive' | 'Competitive' | 'Moderately Competitive' | 'Not Eligible' = 'Not Eligible';
+  let competitiveness: 'Highly Competitive' | 'Competitive' | 'Moderately Competitive' | 'Not Eligible' = 'Moderately Competitive';
   
   if (weightedClusterPoints >= 40) {
     competitiveness = 'Highly Competitive';
   } else if (weightedClusterPoints >= 35) {
     competitiveness = 'Competitive';
-  } else if (weightedClusterPoints >= 25) {
+  } else if (weightedClusterPoints >= 0) {
     competitiveness = 'Moderately Competitive';
-  } else {
-    isEligible = false;
-    competitiveness = 'Not Eligible';
   }
 
   return {
